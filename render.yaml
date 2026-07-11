@@ -1,0 +1,21 @@
+# Render Blueprint — deploys the NeuroFour FastAPI backend as a free web service.
+#
+# One-click: push this repo to GitHub, then in the Render dashboard choose
+#   New +  ->  Blueprint  ->  connect this repo. Render reads this file and
+# provisions the service below. No Dockerfile needed.
+#
+# Note: the Free plan spins the service down after ~15 min of inactivity, so
+# the FIRST request after idle takes ~30-60 s to cold-start. The frontend
+# shows a "waking the backend" state while this happens.
+services:
+  - type: web
+    name: neurofour-api
+    runtime: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.6"

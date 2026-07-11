@@ -1,0 +1,172 @@
+// Types mirroring the NeuroFour backend API contract, verified against the
+// REAL running FastAPI app (app/main.py) — not the originally-documented
+// spec, which the real backend diverges from in several places (agents
+// wrapper, player_to_move naming, winning_line as [row,col] pairs, analyze
+// taking a move-history not a board grid, leaderboard top-level shape).
+
+export type Cell = 0 | 1 | 2;
+/** 6 rows x 7 cols. row 0 = top row, row 5 = bottom row. 0 = empty, 1/2 = player disc. */
+export type BoardGrid = Cell[][];
+
+export type PlayerId = 1 | 2;
+
+export type AgentKind = 'table' | 'nn' | 'search' | 'heuristic' | 'random';
+
+export interface AgentManifest {
+  name: string;
+  kind: AgentKind;
+  params: number;
+  size_bytes: number;
+  flops_per_move: number;
+  artifact_path?: string | null;
+}
+
+/** Raw wire shape of GET /agents. */
+export interface AgentsResponse {
+  agents: AgentManifest[];
+}
+
+export type GameStatus = 'in_progress' | 'won' | 'draw';
+
+export interface WinCell {
+  row: number;
+  col: number;
+}
+
+/** The backend does not return the last move; the frontend derives it from
+ * `board` + `moves` (see lib/format.ts#lastMoveFromGame). */
+export interface LastMove {
+  col: number;
+  row: number;
+  player: PlayerId;
+}
+
+/** Raw wire shape returned by /game/new, GET /game/{id}, /game/{id}/move,
+ * and /game/{id}/agent-move (the last two also add agent_move/agent). */
+export interface GameState {
+  id: string;
+  board: BoardGrid;
+  key: string;
+  moves: number[];
+  legal_moves: number[];
+  player_to_move: PlayerId;
+  to_move_is_agent: boolean;
+  to_move_agent: string | null;
+  first_agent: string | null;
+  second_agent: string | null;
+  status: GameStatus;
+  winner: 0 | PlayerId;
+  /** [row, col] pairs forming the winning four, or null. */
+  winning_line: [number, number][] | null;
+  num_moves: number;
+  agent_move?: number;
+  agent?: string;
+}
+
+export interface NewGameRequest {
+  first_agent?: string | null;
+  second_agent?: string | null;
+}
+
+export interface MoveRequest {
+  col: number;
+}
+
+export type AnalyzeMode = 'value' | 'scored';
+
+/** /analyze accepts a move-history (column ints), a "mask:cur" key string, or
+ * a comma-separated move string — never a full board grid. */
+export interface AnalyzeRequest {
+  board: number[] | string;
+  mode?: AnalyzeMode;
+}
+
+export interface AnalyzeResult {
+  terminal: boolean;
+  player_to_move: PlayerId | null;
+  value: number | null;
+  optimal_cols: number[];
+  best_col: number | null;
+  per_col: Record<string, number | null>;
+  mode?: string;
+  exact?: boolean;
+  winner?: 0 | PlayerId | null;
+  is_draw?: boolean;
+}
+
+export type BudgetTier = 'nano' | 'micro' | 'mini' | 'small' | 'open';
+
+export interface LeaderboardAgent {
+  name: string;
+  kind: AgentKind;
+  params: number;
+  size_bytes: number;
+  flops_per_move: number;
+  flops_plausible?: boolean;
+  latency_ms: number;
+  optimality: number;
+  soundness: number;
+  blunder_rate: number;
+  elo: number;
+  neurogolf_score: number;
+  tier: BudgetTier;
+  pareto: boolean;
+  over_budget: boolean;
+  qualifies_micro?: boolean;
+  per_outcome?: Record<string, { n: number; optimality: number }>;
+}
+
+export interface FrontierBySizePoint {
+  name: string;
+  size_bytes: number;
+  optimality: number;
+  elo: number;
+}
+
+export interface FrontierByFlopsPoint {
+  name: string;
+  flops_per_move: number;
+  optimality: number;
+  elo: number;
+}
+
+export interface Headline {
+  metric: string;
+  value: number;
+  agent: string | null;
+  tier: BudgetTier | null;
+}
+
+export interface TierBest {
+  name: string;
+  optimality: number;
+  size_bytes: number;
+  neurogolf_score: number;
+}
+
+/** Raw wire shape of GET /leaderboard (bench_data/leaderboard.json, served as-is). */
+export interface LeaderboardResponse {
+  seed: number;
+  headline: Headline;
+  auc_strength_logsize: number;
+  tiers: Record<string, TierBest | null>;
+  agents: LeaderboardAgent[];
+  frontier: {
+    by_size: FrontierBySizePoint[];
+    by_flops: FrontierByFlopsPoint[];
+  };
+  ladder?: {
+    elo: Record<string, number>;
+    games: Record<string, number>;
+    scores: Record<string, number>;
+  };
+}
+
+export interface EvaluateResponse {
+  agent: string;
+  optimality: number;
+  soundness: number;
+  blunder_rate: number;
+  neurogolf_score: number;
+  tier: BudgetTier;
+}

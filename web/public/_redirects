@@ -1,0 +1,4 @@
+# Cloudflare Pages / Netlify SPA fallback — every route serves the built
+# index.html so client-side routing (Play / Leaderboard) works on refresh
+# and deep links.
+/*    /index.html   200

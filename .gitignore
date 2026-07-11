@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.hypothesis/
+*.egg-info/
+.venv/
+venv/
+
+# Node / frontend
+web/node_modules/
+web/dist/
+web/test-results/
+web/playwright-report/
+node_modules/
+
+# Env / secrets
+.env
+.env.local
+web/.env
+web/.env.local
+
+# Logs / OS
+*.log
+.DS_Store
+Thumbs.db

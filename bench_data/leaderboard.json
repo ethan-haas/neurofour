@@ -1,0 +1,914 @@
+{
+  "agents": [
+    {
+      "blunder_rate": 0.0,
+      "elo": 843,
+      "flops_per_move": 50000000,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.066,
+      "name": "perfect",
+      "neurogolf_score": 100.0,
+      "optimality": 1.0,
+      "over_budget": true,
+      "params": 0,
+      "pareto": true,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 1.0
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 1.0
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 1.0
+        }
+      },
+      "qualifies_micro": false,
+      "size_bytes": 0,
+      "soundness": 1.0,
+      "tier": "nano"
+    },
+    {
+      "blunder_rate": 0.01,
+      "elo": 754,
+      "flops_per_move": 4999028,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.017,
+      "name": "neurofour-net14",
+      "neurogolf_score": 96.45,
+      "optimality": 0.96,
+      "over_budget": false,
+      "params": 0,
+      "pareto": true,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 0.928571
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.955224
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.96347
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 0,
+      "soundness": 0.99,
+      "tier": "nano"
+    },
+    {
+      "blunder_rate": 0.02,
+      "elo": 657,
+      "flops_per_move": 168070,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.596,
+      "name": "minimax-4",
+      "neurogolf_score": 94.317,
+      "optimality": 0.936667,
+      "over_budget": false,
+      "params": 0,
+      "pareto": true,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 0.857143
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.925373
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.945205
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 0,
+      "soundness": 0.98,
+      "tier": "nano"
+    },
+    {
+      "blunder_rate": 0.033333,
+      "elo": 552,
+      "flops_per_move": 3430,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.185,
+      "name": "minimax-2",
+      "neurogolf_score": 91.283,
+      "optimality": 0.903333,
+      "over_budget": false,
+      "params": 0,
+      "pareto": true,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 0.857143
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.880597
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.913242
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 0,
+      "soundness": 0.966667,
+      "tier": "nano"
+    },
+    {
+      "blunder_rate": 0.046667,
+      "elo": 417,
+      "flops_per_move": 490,
+      "flops_plausible": true,
+      "kind": "heuristic",
+      "latency_ms": 0.062,
+      "name": "heuristic",
+      "neurogolf_score": 90.8,
+      "optimality": 0.9,
+      "over_budget": false,
+      "params": 0,
+      "pareto": true,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 0.714286
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.865672
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.922374
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 0,
+      "soundness": 0.953333,
+      "tier": "nano"
+    },
+    {
+      "blunder_rate": 0.003333,
+      "elo": 536,
+      "flops_per_move": 3361428,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.012,
+      "name": "neurofour-net16s",
+      "neurogolf_score": 74.25,
+      "optimality": 0.95,
+      "over_budget": false,
+      "params": 4705,
+      "pareto": true,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 1.0
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.925373
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.954338
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 2867,
+      "soundness": 0.996667,
+      "tier": "nano"
+    },
+    {
+      "blunder_rate": 0.003333,
+      "elo": 539,
+      "flops_per_move": 1479044,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.012,
+      "name": "neurofour-net16b",
+      "neurogolf_score": 74.03,
+      "optimality": 0.946667,
+      "over_budget": false,
+      "params": 4705,
+      "pareto": true,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 1.0
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.910448
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.954338
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 2867,
+      "soundness": 0.996667,
+      "tier": "nano"
+    },
+    {
+      "blunder_rate": 0.006667,
+      "elo": 462,
+      "flops_per_move": 67228,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.012,
+      "name": "neurofour-net16",
+      "neurogolf_score": 73.332,
+      "optimality": 0.936667,
+      "over_budget": false,
+      "params": 4705,
+      "pareto": true,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 1.0
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.880597
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.949772
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 2867,
+      "soundness": 0.993333,
+      "tier": "nano"
+    },
+    {
+      "blunder_rate": 0.023333,
+      "elo": 482,
+      "flops_per_move": 875364,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.014,
+      "name": "neurofour-net0b",
+      "neurogolf_score": 72.324,
+      "optimality": 0.943333,
+      "over_budget": false,
+      "params": 2745,
+      "pareto": true,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 1.0
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.955224
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.936073
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 3290,
+      "soundness": 0.976667,
+      "tier": "nano"
+    },
+    {
+      "blunder_rate": 0.023333,
+      "elo": 477,
+      "flops_per_move": 1989428,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.013,
+      "name": "neurofour-net0d",
+      "neurogolf_score": 72.108,
+      "optimality": 0.94,
+      "over_budget": false,
+      "params": 2745,
+      "pareto": false,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 1.0
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.940299
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.936073
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 3290,
+      "soundness": 0.976667,
+      "tier": "nano"
+    },
+    {
+      "blunder_rate": 0.026667,
+      "elo": 371,
+      "flops_per_move": 39788,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.013,
+      "name": "neurofour-net0",
+      "neurogolf_score": 71.854,
+      "optimality": 0.936667,
+      "over_budget": false,
+      "params": 2745,
+      "pareto": true,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 1.0
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.940299
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.931507
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 3290,
+      "soundness": 0.973333,
+      "tier": "nano"
+    },
+    {
+      "blunder_rate": 0.02,
+      "elo": 562,
+      "flops_per_move": 3361428,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.013,
+      "name": "neurofour-net15s",
+      "neurogolf_score": 70.168,
+      "optimality": 0.943333,
+      "over_budget": false,
+      "params": 4705,
+      "pareto": false,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 0.857143
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.910448
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.958904
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 4190,
+      "soundness": 0.98,
+      "tier": "micro"
+    },
+    {
+      "blunder_rate": 0.013333,
+      "elo": 507,
+      "flops_per_move": 3361428,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.014,
+      "name": "neurofour-net2",
+      "neurogolf_score": 69.774,
+      "optimality": 0.956667,
+      "over_budget": false,
+      "params": 4705,
+      "pareto": false,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 0.928571
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.955224
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.958904
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 4837,
+      "soundness": 0.986667,
+      "tier": "micro"
+    },
+    {
+      "blunder_rate": 0.013333,
+      "elo": 493,
+      "flops_per_move": 1479044,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.015,
+      "name": "neurofour-net4",
+      "neurogolf_score": 69.774,
+      "optimality": 0.956667,
+      "over_budget": false,
+      "params": 4705,
+      "pareto": true,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 0.928571
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.955224
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.958904
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 4837,
+      "soundness": 0.986667,
+      "tier": "micro"
+    },
+    {
+      "blunder_rate": 0.023333,
+      "elo": 414,
+      "flops_per_move": 67228,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.013,
+      "name": "neurofour-net15",
+      "neurogolf_score": 69.712,
+      "optimality": 0.936667,
+      "over_budget": false,
+      "params": 4705,
+      "pareto": false,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 0.857143
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.895522
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.954338
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 4190,
+      "soundness": 0.976667,
+      "tier": "micro"
+    },
+    {
+      "blunder_rate": 0.016667,
+      "elo": 631,
+      "flops_per_move": 4999834,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.016,
+      "name": "neurofour-net13",
+      "neurogolf_score": 69.532,
+      "optimality": 0.953333,
+      "over_budget": false,
+      "params": 4705,
+      "pareto": false,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 0.857143
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.940299
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.96347
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 4837,
+      "soundness": 0.983333,
+      "tier": "micro"
+    },
+    {
+      "blunder_rate": 0.016667,
+      "elo": 427,
+      "flops_per_move": 67228,
+      "flops_plausible": true,
+      "kind": "search",
+      "latency_ms": 0.013,
+      "name": "neurofour-net1",
+      "neurogolf_score": 69.121,
+      "optimality": 0.946667,
+      "over_budget": false,
+      "params": 4705,
+      "pareto": true,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 0.928571
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.925373
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.954338
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 4837,
+      "soundness": 0.983333,
+      "tier": "micro"
+    },
+    {
+      "blunder_rate": 0.043333,
+      "elo": 331,
+      "flops_per_move": 38992,
+      "flops_plausible": true,
+      "kind": "nn",
+      "latency_ms": 0.047,
+      "name": "neurofour-net",
+      "neurogolf_score": 61.462,
+      "optimality": 0.893333,
+      "over_budget": false,
+      "params": 19399,
+      "pareto": false,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 0.642857
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.850746
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.922374
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 7917,
+      "soundness": 0.956667,
+      "tier": "micro"
+    },
+    {
+      "blunder_rate": 0.036667,
+      "elo": 362,
+      "flops_per_move": 64876,
+      "flops_plausible": true,
+      "kind": "nn",
+      "latency_ms": 0.015,
+      "name": "neurofour-net5",
+      "neurogolf_score": 54.41,
+      "optimality": 0.916667,
+      "over_budget": false,
+      "params": 32327,
+      "pareto": false,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 0.714286
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.895522
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.936073
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 24698,
+      "soundness": 0.963333,
+      "tier": "micro"
+    },
+    {
+      "blunder_rate": 0.423333,
+      "elo": 0,
+      "flops_per_move": 7,
+      "flops_plausible": true,
+      "kind": "random",
+      "latency_ms": 0.008,
+      "name": "random",
+      "neurogolf_score": 31.033,
+      "optimality": 0.263333,
+      "over_budget": false,
+      "params": 0,
+      "pareto": true,
+      "per_outcome": {
+        "drawn": {
+          "n": 14,
+          "optimality": 0.357143
+        },
+        "losing": {
+          "n": 67,
+          "optimality": 0.328358
+        },
+        "winning": {
+          "n": 219,
+          "optimality": 0.237443
+        }
+      },
+      "qualifies_micro": true,
+      "size_bytes": 0,
+      "soundness": 0.576667,
+      "tier": "nano"
+    }
+  ],
+  "auc_strength_logsize": 2.42319,
+  "frontier": {
+    "by_flops": [
+      {
+        "elo": 0,
+        "flops_per_move": 7,
+        "name": "random",
+        "optimality": 0.263333
+      },
+      {
+        "elo": 417,
+        "flops_per_move": 490,
+        "name": "heuristic",
+        "optimality": 0.9
+      },
+      {
+        "elo": 552,
+        "flops_per_move": 3430,
+        "name": "minimax-2",
+        "optimality": 0.903333
+      },
+      {
+        "elo": 371,
+        "flops_per_move": 39788,
+        "name": "neurofour-net0",
+        "optimality": 0.936667
+      },
+      {
+        "elo": 462,
+        "flops_per_move": 67228,
+        "name": "neurofour-net16",
+        "optimality": 0.936667
+      },
+      {
+        "elo": 427,
+        "flops_per_move": 67228,
+        "name": "neurofour-net1",
+        "optimality": 0.946667
+      },
+      {
+        "elo": 657,
+        "flops_per_move": 168070,
+        "name": "minimax-4",
+        "optimality": 0.936667
+      },
+      {
+        "elo": 482,
+        "flops_per_move": 875364,
+        "name": "neurofour-net0b",
+        "optimality": 0.943333
+      },
+      {
+        "elo": 539,
+        "flops_per_move": 1479044,
+        "name": "neurofour-net16b",
+        "optimality": 0.946667
+      },
+      {
+        "elo": 493,
+        "flops_per_move": 1479044,
+        "name": "neurofour-net4",
+        "optimality": 0.956667
+      },
+      {
+        "elo": 536,
+        "flops_per_move": 3361428,
+        "name": "neurofour-net16s",
+        "optimality": 0.95
+      },
+      {
+        "elo": 754,
+        "flops_per_move": 4999028,
+        "name": "neurofour-net14",
+        "optimality": 0.96
+      },
+      {
+        "elo": 843,
+        "flops_per_move": 50000000,
+        "name": "perfect",
+        "optimality": 1.0
+      }
+    ],
+    "by_size": [
+      {
+        "elo": 0,
+        "name": "random",
+        "optimality": 0.263333,
+        "size_bytes": 0
+      },
+      {
+        "elo": 417,
+        "name": "heuristic",
+        "optimality": 0.9,
+        "size_bytes": 0
+      },
+      {
+        "elo": 552,
+        "name": "minimax-2",
+        "optimality": 0.903333,
+        "size_bytes": 0
+      },
+      {
+        "elo": 657,
+        "name": "minimax-4",
+        "optimality": 0.936667,
+        "size_bytes": 0
+      },
+      {
+        "elo": 754,
+        "name": "neurofour-net14",
+        "optimality": 0.96,
+        "size_bytes": 0
+      },
+      {
+        "elo": 843,
+        "name": "perfect",
+        "optimality": 1.0,
+        "size_bytes": 0
+      },
+      {
+        "elo": 462,
+        "name": "neurofour-net16",
+        "optimality": 0.936667,
+        "size_bytes": 2867
+      },
+      {
+        "elo": 539,
+        "name": "neurofour-net16b",
+        "optimality": 0.946667,
+        "size_bytes": 2867
+      },
+      {
+        "elo": 536,
+        "name": "neurofour-net16s",
+        "optimality": 0.95,
+        "size_bytes": 2867
+      },
+      {
+        "elo": 371,
+        "name": "neurofour-net0",
+        "optimality": 0.936667,
+        "size_bytes": 3290
+      },
+      {
+        "elo": 482,
+        "name": "neurofour-net0b",
+        "optimality": 0.943333,
+        "size_bytes": 3290
+      },
+      {
+        "elo": 427,
+        "name": "neurofour-net1",
+        "optimality": 0.946667,
+        "size_bytes": 4837
+      },
+      {
+        "elo": 493,
+        "name": "neurofour-net4",
+        "optimality": 0.956667,
+        "size_bytes": 4837
+      }
+    ]
+  },
+  "headline": {
+    "agent": "neurofour-net14",
+    "metric": "optimality",
+    "tier": "nano",
+    "value": 0.96
+  },
+  "ladder": {
+    "elo": {
+      "heuristic": 417,
+      "minimax-2": 552,
+      "minimax-4": 657,
+      "neurofour-net": 331,
+      "neurofour-net0": 371,
+      "neurofour-net0b": 482,
+      "neurofour-net0d": 477,
+      "neurofour-net1": 427,
+      "neurofour-net13": 631,
+      "neurofour-net14": 754,
+      "neurofour-net15": 414,
+      "neurofour-net15s": 562,
+      "neurofour-net16": 462,
+      "neurofour-net16b": 539,
+      "neurofour-net16s": 536,
+      "neurofour-net2": 507,
+      "neurofour-net4": 493,
+      "neurofour-net5": 362,
+      "perfect": 843,
+      "random": 0
+    },
+    "games": {
+      "heuristic": 380,
+      "minimax-2": 380,
+      "minimax-4": 380,
+      "neurofour-net": 380,
+      "neurofour-net0": 380,
+      "neurofour-net0b": 380,
+      "neurofour-net0d": 380,
+      "neurofour-net1": 380,
+      "neurofour-net13": 380,
+      "neurofour-net14": 380,
+      "neurofour-net15": 380,
+      "neurofour-net15s": 380,
+      "neurofour-net16": 380,
+      "neurofour-net16b": 380,
+      "neurofour-net16s": 380,
+      "neurofour-net2": 380,
+      "neurofour-net4": 380,
+      "neurofour-net5": 380,
+      "perfect": 380,
+      "random": 380
+    },
+    "scores": {
+      "heuristic": 151.5,
+      "minimax-2": 220.0,
+      "minimax-4": 270.0,
+      "neurofour-net": 111.0,
+      "neurofour-net0": 129.5,
+      "neurofour-net0b": 184.5,
+      "neurofour-net0d": 181.5,
+      "neurofour-net1": 156.5,
+      "neurofour-net13": 258.0,
+      "neurofour-net14": 310.5,
+      "neurofour-net15": 150.0,
+      "neurofour-net15s": 225.0,
+      "neurofour-net16": 174.0,
+      "neurofour-net16b": 213.0,
+      "neurofour-net16s": 211.5,
+      "neurofour-net2": 197.0,
+      "neurofour-net4": 190.0,
+      "neurofour-net5": 125.0,
+      "perfect": 341.5,
+      "random": 0.0
+    }
+  },
+  "seed": 4,
+  "tiers": {
+    "micro": {
+      "name": "neurofour-net14",
+      "neurogolf_score": 96.45,
+      "optimality": 0.96,
+      "size_bytes": 0
+    },
+    "mini": {
+      "name": "neurofour-net14",
+      "neurogolf_score": 96.45,
+      "optimality": 0.96,
+      "size_bytes": 0
+    },
+    "nano": {
+      "name": "neurofour-net14",
+      "neurogolf_score": 96.45,
+      "optimality": 0.96,
+      "size_bytes": 0
+    },
+    "open": {
+      "name": "perfect",
+      "neurogolf_score": 100.0,
+      "optimality": 1.0,
+      "size_bytes": 0
+    },
+    "small": {
+      "name": "neurofour-net14",
+      "neurogolf_score": 96.45,
+      "optimality": 0.96,
+      "size_bytes": 0
+    }
+  }
+}
