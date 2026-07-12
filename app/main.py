@@ -295,10 +295,18 @@ class EvaluateIn(BaseModel):
     agent: str
 
 
+# Reported by /health so a running deployment can be identified without shell
+# access -- otherwise "is the server actually running the latest commit?" is
+# unanswerable from outside, and a stale instance looks identical to a fresh
+# one. Bump on a release.
+APP_VERSION = "1.0.0"
+
+
 # ---- endpoints ------------------------------------------------------------ #
 @app.get("/health")
 def health():
-    return {"status": "ok", "agents": registry.agent_names(),
+    return {"status": "ok", "version": APP_VERSION,
+            "agents": registry.agent_names(),
             "leaderboard": os.path.exists(LEADERBOARD_PATH)}
 
 
