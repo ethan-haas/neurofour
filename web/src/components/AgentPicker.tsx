@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { AgentManifest } from '../types';
 import { Badge } from './Badge';
-import { TIER_LABEL, formatBytes, formatPct } from '../lib/format';
+import { TIER_LABEL, formatBytes, formatPct, displayName } from '../lib/format';
 
 export const HUMAN = '__human__';
 
@@ -183,7 +183,7 @@ export function AgentPicker({ id, label, agents, value, onChange, championName, 
     }
   };
 
-  const summary = selectedOption.agent ? selectedOption.agent.display_name : 'You (human)';
+  const summary = selectedOption.agent ? displayName(selectedOption.agent) : 'You (human)';
 
   return (
     <div ref={rootRef} className="flex flex-col gap-1 text-sm">
@@ -283,7 +283,7 @@ export function AgentPicker({ id, label, agents, value, onChange, championName, 
                         {isSelected ? '✓' : ''}
                       </span>
                       <span className="font-medium text-[var(--ink)]">
-                        {opt.agent ? opt.agent.display_name : 'You (human)'}
+                        {opt.agent ? displayName(opt.agent) : 'You (human)'}
                       </span>
                       {isChampion ? <Badge variant="accent">champion</Badge> : null}
                       {opt.agent?.pareto ? <Badge variant="good">pareto</Badge> : null}

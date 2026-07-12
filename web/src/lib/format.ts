@@ -85,3 +85,13 @@ export function lastMoveFromGame(
   }
   return null;
 }
+
+/** The human-facing name for an agent. The API's enriched `/agents` and
+ * `/leaderboard` serve `display_name` ("Zero"); `name` is the internal
+ * registry id ("neurofour-net14"). Rendering `display_name` directly breaks
+ * against any backend response that omits it (e.g. a not-yet-redeployed
+ * server), showing a blank/dash where a name should be -- so every surface
+ * derives the label through here and falls back to the id. */
+export function displayName(agent: { name: string; display_name?: string | null }): string {
+  return agent.display_name ?? agent.name;
+}

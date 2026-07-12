@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { AgentManifest } from '../types';
 import { AgentPicker, HUMAN } from './AgentPicker';
-import { TIER_LABEL, formatBytes, formatFlops, formatLatency, formatPct } from '../lib/format';
+import { TIER_LABEL, formatBytes, formatFlops, formatLatency, formatPct, displayName } from '../lib/format';
 
 /** Full-width strip of the selected agent's stats (C1). This used to live
  * INSIDE AgentPicker, crammed into that picker's own ~145px-wide select
@@ -119,8 +119,8 @@ export function NewGamePanel({ agents, onStart, busy, presetOpponent }: NewGameP
 
       {firstAgent || secondAgent ? (
         <div className="flex flex-col gap-2">
-          {firstAgent ? <AgentStatStrip label={`Red — ${firstAgent.display_name}`} agent={firstAgent} /> : null}
-          {secondAgent ? <AgentStatStrip label={`Yellow — ${secondAgent.display_name}`} agent={secondAgent} /> : null}
+          {firstAgent ? <AgentStatStrip label={`Red — ${displayName(firstAgent)}`} agent={firstAgent} /> : null}
+          {secondAgent ? <AgentStatStrip label={`Yellow — ${displayName(secondAgent)}`} agent={secondAgent} /> : null}
         </div>
       ) : null}
 

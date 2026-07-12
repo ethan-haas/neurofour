@@ -4,7 +4,7 @@ import { StatusBanner } from './StatusBanner';
 import { AgentsGridSkeleton } from './Skeleton';
 import { Badge } from './Badge';
 import type { AgentManifest } from '../types';
-import { TIER_LABEL, formatBytes, formatFlops, formatLatency, formatPct } from '../lib/format';
+import { TIER_LABEL, formatBytes, formatFlops, formatLatency, formatPct, displayName } from '../lib/format';
 
 const KIND_LABEL: Record<AgentManifest['kind'], string> = {
   table: 'Table',
@@ -30,7 +30,7 @@ function AgentCard({ agent, isChampion, onPlay }: { agent: AgentManifest; isCham
   return (
     <div className="flex flex-col gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 transition-colors hover:border-[var(--border-strong)]">
       <div className="min-w-0">
-        <h3 className="truncate text-base font-semibold text-[var(--ink)]">{agent.display_name}</h3>
+        <h3 className="truncate text-base font-semibold text-[var(--ink)]">{displayName(agent)}</h3>
         <p className="truncate text-xs text-[var(--ink-muted-text)]">{agent.subtitle}</p>
       </div>
 
@@ -85,7 +85,7 @@ function AgentCard({ agent, isChampion, onPlay }: { agent: AgentManifest; isCham
         className="mt-1 self-start rounded-md border border-[var(--border-strong)] px-3 py-1.5 text-xs font-semibold
           cursor-pointer hover:bg-[var(--surface-2)]"
       >
-        Play against {agent.display_name}
+        Play against {displayName(agent)}
       </button>
     </div>
   );
