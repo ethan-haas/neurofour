@@ -58,13 +58,33 @@
      (3:1 non-text) applies instead. */
   --accent-solid: #1c5cab;
   --accent-solid-ink: #ffffff;
+  /* Tinted background for a SELECTED (not merely hovered/keyboard-active)
+     picker row -- see AgentPicker's option list. Distinct from
+     --surface-2 (used for the keyboard-active row) so a selected row stays
+     visibly marked even while the user arrows past other rows. */
+  --accent-tint: rgba(28, 92, 171, 0.1);
 
-  /* discs (classic connect four) */
+  /* discs (classic connect four). Deliberately the SAME hex in both themes
+     (see the .dark override below, which repeats these exact values) --
+     letting red drift to a lighter, desaturated salmon in dark mode (an
+     earlier iteration) made it read as "disabled/greyed out" red next to a
+     yellow that barely moved, especially once it also had to compete
+     visually with the green win-ring. A fixed, saturated red stays legible
+     against both the light and dark board-frame colors below (verified
+     >=3:1 non-text contrast, the WCAG 1.4.11 bar for a graphical UI object,
+     against both --board-frame values). */
   --disc-1: #d03b3b;
   --disc-1-ring: #a32626;
   --disc-2: #eda100;
   --disc-2-ring: #a86a00;
   --disc-empty: #dedcd4;
+  /* Winning-line ring. Deliberately NOT --good (green): the analyze legend
+     already uses --good for "winning move", so a green ring around the
+     actual winning discs collided with that unrelated meaning -- and green
+     visually clashed against the crimson --disc-1. A warm gold reads as
+     "prize/highlight" without borrowing the analyze legend's semantic
+     color, and pairs cleanly with either disc color. */
+  --win-ring: #d4a017;
   /* Board frame. Its own token (not --accent) so the board can be themed
      independently of links/rings: in light this is the classic connect-four
      blue (unchanged from when the frame reused --accent), in dark it drops to
@@ -123,12 +143,15 @@
   --accent-2: #9085e9;
   --accent-solid: #3987e5;
   --accent-solid-ink: #071322;
+  --accent-tint: rgba(57, 135, 229, 0.16);
 
-  --disc-1: #e66767;
-  --disc-1-ring: #b73e3e;
+  /* Same red as light mode -- see the light-theme comment above. */
+  --disc-1: #d03b3b;
+  --disc-1-ring: #a32626;
   --disc-2: #c98500;
   --disc-2-ring: #8a5a00;
   --disc-empty: #2c2c2a;
+  --win-ring: #e8c04a;
   /* Deep desaturated navy (not the bright --accent #3987e5): reads as a real
      board resting on the #0d0d0d page, with the dark --disc-empty holes
      reading as recessed empty slots rather than the bright-blue-slab +
@@ -173,6 +196,26 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* AgentPicker's option list (C5): a plain `overflow-y: auto` scroll
+   container gives NO visible affordance that it scrolls at all until a
+   user's cursor happens to be over it (default OS overlay scrollbars are
+   invisible otherwise) -- an always-visible, always-on-layout scrollbar is
+   an explicit, unmissable "there's more below" signal instead. */
+.picker-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.picker-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.picker-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.picker-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border-radius: 4px;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -202,22 +245,39 @@ body {
   0%,
   100% {
     box-shadow:
-      0 0 0 3px var(--good),
-      0 0 0 3px var(--good) inset;
+      0 0 0 3px var(--win-ring),
+      0 0 0 3px var(--win-ring) inset;
   }
   50% {
     box-shadow:
-      0 0 0 6px var(--good),
-      0 0 0 3px var(--good) inset;
+      0 0 0 5px var(--win-ring),
+      0 0 0 3px var(--win-ring) inset;
   }
 }
 
 .win-cell {
   /* Static ring is the real signal; the animation is a decorative pulse on
      top of it, so the winning line stays visibly marked even with
-     prefers-reduced-motion frozen at the keyframe start. */
+     prefers-reduced-motion frozen at the keyframe start. Neutral gold, not
+     the analyze legend's green (see --win-ring's own comment) -- and the
+     pulse only grows to 5px (not the disc-drop-era 6px) so it never exceeds
+     the board card's own inner padding and bleeds past the frame. */
   box-shadow:
-    0 0 0 3px var(--good),
-    0 0 0 3px var(--good) inset;
+    0 0 0 3px var(--win-ring),
+    0 0 0 3px var(--win-ring) inset;
   animation: pulse-win 1.4s ease-in-out infinite;
+}
+
+/* The Analyze checkbox is the only native <input type="checkbox"> in the
+   app. Left un-styled, an unchecked box in dark mode renders as a near-
+   invisible dark square on a dark card (OS-themed border color, not this
+   app's own --border-strong) -- give it an explicit, theme-aware border and
+   tint the checked fill with the app's own accent instead of the browser
+   default blue. */
+input[type='checkbox'] {
+  accent-color: var(--accent-solid);
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  width: 16px;
+  height: 16px;
 }

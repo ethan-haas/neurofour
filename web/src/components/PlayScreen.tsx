@@ -7,11 +7,18 @@ import { usePrefersReducedMotion } from '../lib/theme';
 import { Board } from './Board';
 import { NewGamePanel } from './NewGamePanel';
 import { StatusBanner } from './StatusBanner';
-import type { AnalyzeResult, GameState } from '../types';
+import type { AgentManifest, AnalyzeResult, GameState } from '../types';
 
-function playerLabel(game: GameState, seat: 1 | 2): string {
-  const agent = seat === 1 ? game.first_agent : game.second_agent;
-  return agent ?? 'You';
+/** The registry id (e.g. "neurofour-net14") must never be shown to a user --
+ * the rest of the app (Agents cards, Leaderboard table/chart) always shows
+ * `display_name` ("Zero"), so the Play status line has to agree with it too
+ * (was leaking the raw id verbatim: "Yellow to move (neurofour-net14)").
+ * Falls back to the id only if the agents list hasn't loaded yet / doesn't
+ * contain it, never to a blank. */
+function playerLabel(game: GameState, seat: 1 | 2, agents: AgentManifest[]): string {
+  const agentId = seat === 1 ? game.first_agent : game.second_agent;
+  if (!agentId) return 'You';
+  return agents.find((a) => a.name === agentId)?.display_name ?? agentId;
 }
 
 const AGENT_MOVE_DELAY_MS = 550;
@@ -70,6 +77,7 @@ export function PlayScreen({ presetOpponent }: PlayScreenProps = {}) {
   const lastAnalyzedGameIdRef = useRef<string | null>(null);
 
   const isWatchMode = Boolean(game?.first_agent) && Boolean(game?.second_agent);
+  const agentsList = agentsState.status === 'success' ? agentsState.data : [];
 
   // The backend doesn't return a "last move" field — derive it from board + moves.
   const lastMove = useMemo(() => (game ? lastMoveFromGame(game.board, game.moves) : null), [game]);
@@ -84,7 +92,7 @@ export function PlayScreen({ presetOpponent }: PlayScreenProps = {}) {
 
     if (!lastMove) {
       setLiveMessage(
-        `New game started. Red: ${playerLabel(game, 1)}. Yellow: ${playerLabel(game, 2)}. ${playerLabel(game, 1)} moves first.`,
+        `New game started. Red: ${playerLabel(game, 1, agentsList)}. Yellow: ${playerLabel(game, 2, agentsList)}. ${playerLabel(game, 1, agentsList)} moves first.`,
       );
       return;
     }
@@ -96,7 +104,7 @@ export function PlayScreen({ presetOpponent }: PlayScreenProps = {}) {
       msg += ' The game is a draw.';
     }
     setLiveMessage(msg);
-  }, [game, lastMove]);
+  }, [game, lastMove, agentsList]);
 
   // Auto-advance agent turns (human-vs-agent auto-reply, and agent-vs-agent watch mode).
   useEffect(() => {
@@ -209,6 +217,15 @@ export function PlayScreen({ presetOpponent }: PlayScreenProps = {}) {
     [playMove],
   );
 
+  // "Play again" on the result card re-starts with the SAME two
+  // participants the just-finished game had (not whatever the sidebar
+  // selects currently show -- those are independent controlled state and
+  // may have been changed mid-game, e.g. via a preset-opponent navigation).
+  const handlePlayAgain = useCallback(() => {
+    if (!game) return;
+    handleStart(game.first_agent, game.second_agent);
+  }, [game, handleStart]);
+
   const humanCanPlay = Boolean(game) && game!.status === 'in_progress' && !game!.to_move_is_agent && !busy;
 
   // NOTE: `presetOpponent` is intentionally NOT cleared here. NewGamePanel's
@@ -285,7 +302,7 @@ export function PlayScreen({ presetOpponent }: PlayScreenProps = {}) {
               <span className="font-medium text-[var(--ink)]">Status</span>
               <span className="font-medium text-[var(--ink-2)]">
                 {game.status === 'in_progress'
-                  ? `${game.player_to_move === 1 ? 'Red' : 'Yellow'} to move (${playerLabel(game, game.player_to_move)})`
+                  ? `${game.player_to_move === 1 ? 'Red' : 'Yellow'} to move (${playerLabel(game, game.player_to_move, agentsList)})`
                   : game.status === 'draw'
                     ? 'Draw'
                     : `${game.winner === 1 ? 'Red' : 'Yellow'} won`}
@@ -387,42 +404,60 @@ export function PlayScreen({ presetOpponent }: PlayScreenProps = {}) {
         ) : null}
 
         {loading && !game ? (
-          <StatusBanner kind="loading" title="Starting game…" />
+          <StatusBanner kind="loading" title="Starting game…" bare />
         ) : !game ? (
-          <StatusBanner kind="empty" title="No game yet" detail="Choose your opponents, then start a new game." />
+          <StatusBanner kind="empty" title="No game yet" detail="Choose your opponents, then start a new game." bare />
         ) : (
           <>
             {game.status !== 'in_progress' ? (
+              // A real result card (M9), not a thin one-line banner: large
+              // type, a winner-tinted background + border (not the analyze
+              // legend's green -- see --win-ring's own comment for why that
+              // collided with the winning-disc ring color), and a primary
+              // "Play again" action so finishing a game isn't a dead end
+              // that requires reaching back into the sidebar form.
               <div
                 role="status"
-                className="flex w-full max-w-[640px] items-center justify-center gap-2 rounded-lg border px-4 py-3 text-center font-medium text-[var(--ink)]"
+                className="flex w-full max-w-[640px] flex-col items-center gap-3 rounded-xl border-2 px-6 py-6 text-center"
                 style={{
-                  // Winner-identity color, not green: a green "Red wins!"
-                  // banner clashed with Red's own identity color (green = a
-                  // generic success convention here fought the player color).
-                  // Border carries the winner's disc-ring hue (non-text, 3:1
-                  // is enough); the text itself stays --ink so it clears AA in
-                  // both themes, and a small winner-colored disc dot supplies
-                  // the semantic color cue. Draw stays neutral.
                   borderColor:
                     game.status === 'draw'
                       ? 'var(--border-strong)'
                       : game.winner === 1
                         ? 'var(--disc-1-ring)'
                         : 'var(--disc-2-ring)',
+                  backgroundColor:
+                    game.status === 'draw'
+                      ? 'var(--surface-2)'
+                      : `color-mix(in srgb, ${game.winner === 1 ? 'var(--disc-1-ring)' : 'var(--disc-2-ring)'} 12%, var(--surface))`,
                 }}
               >
-                {game.status !== 'draw' ? (
-                  <span
-                    aria-hidden="true"
-                    className="inline-block h-3.5 w-3.5 shrink-0 rounded-full border-2"
-                    style={{
-                      backgroundColor: game.winner === 1 ? 'var(--disc-1)' : 'var(--disc-2)',
-                      borderColor: game.winner === 1 ? 'var(--disc-1-ring)' : 'var(--disc-2-ring)',
-                    }}
-                  />
-                ) : null}
-                {game.status === 'draw' ? "It's a draw." : `${game.winner === 1 ? 'Red' : 'Yellow'} wins!`}
+                <div className="flex items-center gap-2.5">
+                  {game.status !== 'draw' ? (
+                    <span
+                      aria-hidden="true"
+                      className="inline-block h-5 w-5 shrink-0 rounded-full border-2"
+                      style={{
+                        backgroundColor: game.winner === 1 ? 'var(--disc-1)' : 'var(--disc-2)',
+                        borderColor: game.winner === 1 ? 'var(--disc-1-ring)' : 'var(--disc-2-ring)',
+                      }}
+                    />
+                  ) : null}
+                  <p className="text-2xl font-bold text-[var(--ink)]">
+                    {game.status === 'draw' ? "It's a draw." : `${game.winner === 1 ? 'Red' : 'Yellow'} wins!`}
+                  </p>
+                </div>
+                <p className="text-xs text-[var(--ink-muted-text)]">
+                  {playerLabel(game, 1, agentsList)} vs {playerLabel(game, 2, agentsList)}
+                </p>
+                <button
+                  type="button"
+                  onClick={handlePlayAgain}
+                  className="mt-1 rounded-md px-4 py-2 text-sm font-semibold cursor-pointer"
+                  style={{ backgroundColor: 'var(--accent-solid)', color: 'var(--accent-solid-ink)' }}
+                >
+                  Play again
+                </button>
               </div>
             ) : null}
 

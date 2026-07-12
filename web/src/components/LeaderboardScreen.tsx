@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 import { StatusBanner } from './StatusBanner';
+import { LeaderboardSkeleton } from './Skeleton';
 import { ParetoPlot, type CostAxis } from './ParetoPlot';
 import { LeaderboardTable } from './LeaderboardTable';
 
@@ -20,7 +21,7 @@ export function LeaderboardScreen() {
       {state.status === 'error' ? (
         <StatusBanner kind="error" title="Could not load the leaderboard" detail={state.message} onRetry={state.reload} />
       ) : state.status === 'loading' || state.status === 'idle' ? (
-        <StatusBanner kind="loading" title="Loading leaderboard…" />
+        <LeaderboardSkeleton />
       ) : state.data.agents.length === 0 ? (
         <StatusBanner kind="empty" title="No scored agents yet" detail="Run the bench to populate leaderboard.json." onRetry={state.reload} />
       ) : (

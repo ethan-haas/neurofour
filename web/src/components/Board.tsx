@@ -192,7 +192,15 @@ export function Board({
           Wrapping both in one bordered/backgrounded card also stops the
           toolbar from reading as a separate floating strip detached above
           the board: it's now visually inside the same panel. */}
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-2">
+      {/* p-3 (not the old p-2): the win-cell ring's pulse animation grows to
+          5px outside each cell (see .win-cell in index.css) -- p-2 (8px) let
+          that ring visibly bleed past this card's own edge at narrow
+          viewports (vision review: "on mobile the ring bleeds past the
+          board's frame padding"). p-3 (12px) comfortably clears it at every
+          viewport while the toolbar row above still shares this exact same
+          inset (both are direct children of this one div), so column N's
+          badge stays in pixel register with column N's disc below it. */}
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3">
       <div
         role="toolbar"
         aria-label="Choose a column to drop your disc"
@@ -201,38 +209,65 @@ export function Board({
         className="grid gap-1.5"
         style={{ gridTemplateColumns: `repeat(${EMPTY_BOARD_COLS}, minmax(0,1fr))` }}
       >
-        {Array.from({ length: EMPTY_BOARD_COLS }, (_, col) => {
-          const legal = legalSet.has(col) && interactive && !busy;
-          const a = analysisFor(col);
-          const tabIndex = col === focusedCol ? 0 : -1;
-          return (
-            <button
-              key={col}
-              ref={(el) => {
-                buttonRefs.current[col] = el;
-              }}
-              type="button"
-              tabIndex={interactive ? tabIndex : -1}
-              disabled={!legal}
-              aria-disabled={!legal}
-              aria-label={
-                legalSet.has(col)
-                  ? `Drop disc in column ${col + 1}${
-                      a
-                        ? `, solver says ${a.tone === 'good' ? 'winning' : a.tone === 'bad' ? 'losing' : 'drawing'}${a.isBest ? ', best move' : ''}${
-                            a.mateIn ? ` in ${a.mateIn} ${a.mateIn === 1 ? 'move' : 'moves'}` : ''
-                          }${a.isEstimate ? ' (fast estimate, not a proven result)' : ''}`
-                        : ''
-                    }`
-                  : `Column ${col + 1}, full`
-              }
-              onClick={() => legal && onDrop(col)}
-              onFocus={() => setFocusedCol(col)}
-              className="group flex flex-col items-center gap-1.5 rounded-md py-2 text-xs font-medium
-                bg-transparent border border-[var(--border)] text-[var(--ink-2)]
-                enabled:hover:bg-[var(--surface-2)] enabled:hover:border-[var(--border-strong)]
-                disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
-            >
+        {/* A legal (droppable) column and a full/game-over one used to share
+            the EXACT same light-gray border on white in every state --
+            vision review: "the primary interaction reads as disabled".
+            `legal` now gets a real affordance (a border + faint background
+            tint in the CURRENT mover's own color, so it visibly says "drop
+            HERE, it's your color's turn") and the genuinely disabled state
+            drops its border entirely and dims further (30% -> 40% opacity),
+            so the two are unmistakable at a glance, not just to a
+            hover-only cursor. */}
+        {(() => {
+          const moverColor = toMove === 1 ? 'var(--disc-1-ring)' : 'var(--disc-2-ring)';
+          return Array.from({ length: EMPTY_BOARD_COLS }, (_, col) => {
+            const legal = legalSet.has(col) && interactive && !busy;
+            const a = analysisFor(col);
+            const tabIndex = col === focusedCol ? 0 : -1;
+            return (
+              <button
+                key={col}
+                ref={(el) => {
+                  buttonRefs.current[col] = el;
+                }}
+                type="button"
+                tabIndex={interactive ? tabIndex : -1}
+                disabled={!legal}
+                aria-disabled={!legal}
+                aria-label={
+                  legalSet.has(col)
+                    ? `Drop disc in column ${col + 1}${
+                        a
+                          ? `, solver says ${a.tone === 'good' ? 'winning' : a.tone === 'bad' ? 'losing' : 'drawing'}${a.isBest ? ', best move' : ''}${
+                              a.mateIn ? ` in ${a.mateIn} ${a.mateIn === 1 ? 'move' : 'moves'}` : ''
+                            }${a.isEstimate ? ' (fast estimate, not a proven result)' : ''}`
+                          : ''
+                      }`
+                    : `Column ${col + 1}, full`
+                }
+                onClick={() => legal && onDrop(col)}
+                onFocus={() => setFocusedCol(col)}
+                className={`group flex flex-col items-center gap-1.5 rounded-md py-2 text-xs font-medium
+                  transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 ${
+                    legal ? 'hover:bg-[var(--surface-2)]' : ''
+                  }`}
+                style={
+                  legal
+                    ? // Border only, NOT a background tint: analysis mode
+                      // paints its own semantic text color (--good/--critical)
+                      // directly on top of this button's background, and a
+                      // tinted fill in the mover's own red/yellow measurably
+                      // dropped that text below 4.5:1 AA contrast (axe caught
+                      // "Loss" text at 4.1:1 on a reddish tint). A crisp
+                      // 1.5px mover-colored border against the UNCHANGED
+                      // --surface background keeps full contrast for
+                      // whatever text renders inside, while still being an
+                      // unmistakably stronger, colored affordance than the
+                      // old flat --border hairline every state shared.
+                      { color: 'var(--ink)', border: `1.5px solid ${moverColor}` }
+                    : { color: 'var(--ink-muted-text)', border: '1.5px solid transparent' }
+                }
+              >
               {a ? (
                 <>
                   <span
@@ -275,8 +310,9 @@ export function Board({
               )}
               <span className="tabular text-[var(--ink-muted-text)]">col {col + 1}</span>
             </button>
-          );
-        })}
+            );
+          });
+        })()}
       </div>
 
       {/* No own padding here (unlike the pre-fix version) -- it must share

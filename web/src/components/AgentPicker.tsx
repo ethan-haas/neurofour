@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { AgentManifest } from '../types';
-import { TIER_LABEL, formatBytes, formatFlops, formatLatency, formatPct } from '../lib/format';
+import { Badge } from './Badge';
+import { TIER_LABEL, formatBytes, formatPct } from '../lib/format';
 
 export const HUMAN = '__human__';
 
@@ -26,22 +27,31 @@ function buildOptions(agents: AgentManifest[]): AgentOption[] {
   return [{ value: HUMAN, agent: null }, ...agents.map((a) => ({ value: a.name, agent: a }))];
 }
 
-/** Compact stat chips shown inline on each option row (and reused on the
- * trigger's collapsed summary). Renders nothing for a stat that's null
- * (no leaderboard row for this agent) rather than a fabricated placeholder. */
+/** Stat "chips" shown on each option row. Previously these were a loose
+ * inline run of spans at 11px, so nothing lined up down the list -- "3.2
+ * KB", "24.1 KB", "0 B" each started at a different x, and the eye couldn't
+ * scan the column. Fixed-width columns + tabular numerals + right-aligned
+ * numbers turn it into an actual scannable table; the tier badge gets its
+ * own trailing column so it never reflows into the number columns. Renders
+ * an em dash (not a blank) for a stat that's genuinely absent (no
+ * leaderboard row for this agent yet), so the column still holds its width. */
 function OptionStats({ agent }: { agent: AgentManifest }) {
   return (
-    <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[var(--ink-muted-text)]">
-      {agent.optimality != null ? <span className="tabular">{formatPct(agent.optimality)} opt</span> : null}
-      <span className="tabular">{formatBytes(agent.size_bytes)}</span>
-      {agent.tier ? (
-        <span
-          className="rounded px-1 py-0.5 text-[10px] font-semibold"
-          style={{ backgroundColor: 'var(--surface-2)', color: 'var(--ink-2)' }}
-        >
-          {TIER_LABEL[agent.tier]}
-        </span>
-      ) : null}
+    <span className="flex items-center gap-x-3 text-xs text-[var(--ink-muted-text)]">
+      <span className="tabular inline-block w-[60px] text-right">
+        {agent.optimality != null ? `${formatPct(agent.optimality)} opt` : '—'}
+      </span>
+      <span className="tabular inline-block w-14 text-right">{formatBytes(agent.size_bytes)}</span>
+      <span className="inline-block w-[70px]">
+        {agent.tier ? (
+          <span
+            className="rounded px-1 py-0.5 text-[10px] font-semibold"
+            style={{ backgroundColor: 'var(--surface-2)', color: 'var(--ink-2)' }}
+          >
+            {TIER_LABEL[agent.tier]}
+          </span>
+        ) : null}
+      </span>
     </span>
   );
 }
@@ -202,104 +212,90 @@ export function AgentPicker({ id, label, agents, value, onChange, championName, 
         </button>
 
         {open ? (
-          <ul
-            ref={listRef}
-            id={listboxId}
-            role="listbox"
-            aria-labelledby={labelId}
-            tabIndex={-1}
-            className="absolute z-30 mt-1 max-h-72 w-full min-w-[260px] overflow-y-auto rounded-md border
-              border-[var(--border-strong)] bg-[var(--surface)] py-1 shadow-lg"
+          // Outer wrapper carries the border/shadow/positioning; the count
+          // header is sticky at its top (outside the scroll region, so it
+          // never scrolls away), and the `<ul>` itself is the ONLY scrolling
+          // element. A visible (not auto-hiding-overlay) scrollbar --
+          // `.picker-scroll` in index.css -- plus this header together
+          // replace what used to be a scroll container with literally no
+          // visible affordance that it scrolled at all, or how many options
+          // existed (vision review: "reasonably concludes the arena has 4
+          // agents"). max-h-64 deliberately ends mid-row, not on a row
+          // boundary, so the cut-off row itself signals "more below".
+          <div
+            className="absolute z-30 mt-1 w-full min-w-[280px] overflow-hidden rounded-md border
+              border-[var(--border-strong)] bg-[var(--surface)] shadow-lg"
           >
-            {options.map((opt, i) => {
-              const isSelected = opt.value === value;
-              const isActive = i === activeIndex;
-              const isChampion = opt.agent != null && opt.agent.name === championName;
-              return (
-                <li
-                  key={opt.value}
-                  id={optionId(i)}
-                  role="option"
-                  aria-selected={isSelected}
-                  onMouseEnter={() => setActiveIndex(i)}
-                  onClick={() => {
-                    setActiveIndex(i);
-                    commit(i);
-                    closeList();
-                    buttonRef.current?.focus();
-                  }}
-                  className="flex cursor-pointer flex-col gap-0.5 px-2.5 py-1.5"
-                  style={{ backgroundColor: isActive ? 'var(--surface-2)' : undefined }}
-                >
-                  <span className="flex items-center gap-1.5">
-                    <span className="font-medium text-[var(--ink)]">
-                      {opt.agent ? opt.agent.display_name : 'You (human)'}
+            <div
+              className="border-b border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1.5 text-[11px]
+                font-semibold uppercase tracking-wide text-[var(--ink-2)]"
+            >
+              {options.length} options · ranked by NeuroFour score
+            </div>
+            <ul
+              ref={listRef}
+              id={listboxId}
+              role="listbox"
+              aria-labelledby={labelId}
+              tabIndex={-1}
+              className="picker-scroll max-h-64 overflow-y-auto py-1"
+            >
+              {options.map((opt, i) => {
+                const isSelected = opt.value === value;
+                const isActive = i === activeIndex;
+                const isChampion = opt.agent != null && opt.agent.name === championName;
+                return (
+                  <li
+                    key={opt.value}
+                    id={optionId(i)}
+                    role="option"
+                    aria-selected={isSelected}
+                    onMouseEnter={() => setActiveIndex(i)}
+                    onClick={() => {
+                      setActiveIndex(i);
+                      commit(i);
+                      closeList();
+                      buttonRef.current?.focus();
+                    }}
+                    className="flex cursor-pointer flex-col gap-0.5 border-l-[3px] px-2 py-1.5"
+                    style={{
+                      backgroundColor: isActive ? 'var(--surface-2)' : isSelected ? 'var(--accent-tint)' : undefined,
+                      borderLeftColor: isSelected ? 'var(--accent-solid)' : 'transparent',
+                    }}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      {/* Leading check, not just a ~2% background tint, so
+                          the selected row is unmistakable at a glance (the
+                          old selected-row highlight was nearly invisible --
+                          vision review measured it as ~2% lighter gray). */}
+                      <span
+                        aria-hidden="true"
+                        className="inline-block w-3 shrink-0 text-center font-bold"
+                        style={{ color: 'var(--accent-solid)' }}
+                      >
+                        {isSelected ? '✓' : ''}
+                      </span>
+                      <span className="font-medium text-[var(--ink)]">
+                        {opt.agent ? opt.agent.display_name : 'You (human)'}
+                      </span>
+                      {isChampion ? <Badge variant="accent">champion</Badge> : null}
+                      {opt.agent?.pareto ? <Badge variant="good">pareto</Badge> : null}
                     </span>
-                    {isChampion ? (
-                      <span
-                        className="rounded px-1 py-0.5 text-[9px] font-semibold"
-                        style={{ backgroundColor: 'var(--accent-solid)', color: 'var(--accent-solid-ink)' }}
-                      >
-                        champion
+                    {opt.agent ? (
+                      <span className="pl-[18px] text-[11px] text-[var(--ink-muted-text)]">{opt.agent.subtitle}</span>
+                    ) : null}
+                    {opt.agent ? (
+                      <span className="pl-[18px]">
+                        <OptionStats agent={opt.agent} />
                       </span>
                     ) : null}
-                    {opt.agent?.pareto ? (
-                      <span
-                        className="rounded px-1 py-0.5 text-[9px] font-semibold"
-                        style={{ color: 'var(--good-text)', border: '1px solid var(--good)' }}
-                      >
-                        pareto
-                      </span>
-                    ) : null}
-                  </span>
-                  {opt.agent ? (
-                    <span className="text-[11px] text-[var(--ink-muted-text)]">{opt.agent.subtitle}</span>
-                  ) : null}
-                  {opt.agent ? <OptionStats agent={opt.agent} /> : null}
-                </li>
-              );
-            })}
-          </ul>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         ) : null}
       </div>
-
-      {selectedOption.agent ? (
-        <dl
-          className="mt-1 grid grid-cols-3 gap-x-3 gap-y-1 rounded-md border border-[var(--border)]
-            bg-[var(--surface-2)] px-2.5 py-2 text-[11px] text-[var(--ink-2)]"
-        >
-          <div>
-            <dt className="text-[var(--ink-muted-text)]">Optimality</dt>
-            <dd className="tabular font-medium text-[var(--ink)]">
-              {selectedOption.agent.optimality != null ? formatPct(selectedOption.agent.optimality) : '—'}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[var(--ink-muted-text)]">Size</dt>
-            <dd className="tabular font-medium text-[var(--ink)]">{formatBytes(selectedOption.agent.size_bytes)}</dd>
-          </div>
-          <div>
-            <dt className="text-[var(--ink-muted-text)]">FLOPs/move</dt>
-            <dd className="tabular font-medium text-[var(--ink)]">{formatFlops(selectedOption.agent.flops_per_move)}</dd>
-          </div>
-          <div>
-            <dt className="text-[var(--ink-muted-text)]">Latency</dt>
-            <dd className="tabular font-medium text-[var(--ink)]">
-              {selectedOption.agent.latency_ms != null ? formatLatency(selectedOption.agent.latency_ms) : '—'}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[var(--ink-muted-text)]">Elo</dt>
-            <dd className="tabular font-medium text-[var(--ink)]">{selectedOption.agent.elo ?? '—'}</dd>
-          </div>
-          <div>
-            <dt className="text-[var(--ink-muted-text)]">Tier</dt>
-            <dd className="font-medium text-[var(--ink)]">
-              {selectedOption.agent.tier ? TIER_LABEL[selectedOption.agent.tier] : '—'}
-            </dd>
-          </div>
-        </dl>
-      ) : null}
     </div>
   );
 }

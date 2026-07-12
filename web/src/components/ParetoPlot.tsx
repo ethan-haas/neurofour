@@ -32,6 +32,14 @@ const CAT_LABEL: Record<LeaderboardAgent['kind'], string> = {
 
 const KIND_ORDER: LeaderboardAgent['kind'][] = ['table', 'nn', 'search', 'heuristic', 'random'];
 
+/** The human-facing name for an agent. The API serves `display_name` ("Zero");
+ * `name` is the internal registry id ("neurofour-net14") and must never be the
+ * label a user (or a screen reader) is given -- the rest of the app, including
+ * this chart's own legend, shows the display name, so the plot's points, labels
+ * and detail panel have to agree with it. Falls back to the id if an agent
+ * predates the display map. */
+const labelOf = (a: Pick<LeaderboardAgent, 'name' | 'display_name'>): string => a.display_name ?? a.name;
+
 // Tier boundaries mirror app/neurogolf/config.py's TIERS caps (nano/micro/
 // mini/small size_bytes, excluding the unbounded "open" tier) -- these are
 // the size-axis reference lines that actually mean something (a budget-tier
@@ -115,11 +123,29 @@ const FLOPS_DOMAIN_MAX = Math.log10(1 + FLOP_CAP) + 0.6;
 const Y_MIN_SPAN = 0.12;
 const Y_PAD_FRAC = 0.16;
 
+/** The FIRST zoom pass (span = dataMax - dataMin over every plotted agent)
+ * fixed the "0-100% fixed axis" problem but immediately hit a second,
+ * subtler one: the `random` kind exists purely as a deliberately-bad
+ * reference point (an agent that just picks any legal column) -- it's not a
+ * competing agent, and its optimality sits far below every real agent's. A
+ * domain that still spans all the way down to include it re-created almost
+ * the exact same failure one level up (vision review: "the y-axis spans
+ * 15-100% but every competing agent sits at 90-100%... one lone Random dot
+ * at ~30% is what stretches the axis"). The domain is now computed from the
+ * COMPETING agents only; `random` (and anything else, in a future roster,
+ * that isn't a real contender) still gets drawn -- `yScale` below already
+ * clamps any point below `domainMin` to the plot's bottom edge, so an
+ * excluded outlier renders as a real, focusable, correctly-labelled point
+ * sitting at the very bottom of the chart instead of vanishing or lying
+ * about its value -- it just no longer gets to dictate how much of the
+ * canvas the real competitors are allowed to use. */
 function yAxisConfig(agents: LeaderboardAgent[]): { domainMin: number; domainMax: number; ticks: number[] } {
-  if (agents.length === 0) return { domainMin: 0, domainMax: 1, ticks: [0, 0.25, 0.5, 0.75, 1] };
+  const competing = agents.filter((a) => a.kind !== 'random');
+  const pool = competing.length > 0 ? competing : agents;
+  if (pool.length === 0) return { domainMin: 0, domainMax: 1, ticks: [0, 0.25, 0.5, 0.75, 1] };
   let dataMin = Infinity;
   let dataMax = -Infinity;
-  for (const a of agents) {
+  for (const a of pool) {
     if (a.optimality < dataMin) dataMin = a.optimality;
     if (a.optimality > dataMax) dataMax = a.optimality;
   }
@@ -402,6 +428,13 @@ export function ParetoPlot({ agents, axis, onAxisChange, flagship }: ParetoPlotP
         </div>
       </div>
 
+      {/* Two legends, not one -- the single combined row used to mix
+          taxonomy (what KIND of agent a color means), identity (which
+          specific agent the flagship marker points at), and status (over
+          budget) all in one visually undifferentiated run. Splitting them
+          groups like-with-like: the first row is purely "what does this dot
+          COLOR mean", the second is "what does this SPECIFIC marker/point
+          mean". */}
       <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--ink-2)]">
         {KIND_ORDER.map((k) => (
           <span key={k} className="inline-flex items-center gap-1">
@@ -409,23 +442,31 @@ export function ParetoPlot({ agents, axis, onAxisChange, flagship }: ParetoPlotP
             {CAT_LABEL[k]}
           </span>
         ))}
-        {flagship ? (
-          <span className="inline-flex items-center gap-1 font-medium text-[var(--ink)]">
-            <span
-              aria-hidden="true"
-              className="inline-block h-3 w-3 rounded-full ring-2"
-              style={{ backgroundColor: 'var(--accent-solid)', boxShadow: '0 0 0 2px var(--ink)' }}
-            />
-            {agents.find((a) => a.name === flagship)?.display_name ?? flagship} (flagship)
-          </span>
-        ) : null}
-        {hasOverBudget ? (
-          <span className="inline-flex items-center gap-1 opacity-70">
-            <span aria-hidden="true" className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: 'var(--ink-muted)' }} />
-            Over budget (off cheap frontier)
-          </span>
-        ) : null}
       </div>
+      {flagship || hasOverBudget ? (
+        <div className="-mt-1.5 flex flex-wrap items-center gap-3 text-xs text-[var(--ink-2)]">
+          {flagship ? (
+            <span className="inline-flex items-center gap-1 font-medium text-[var(--ink)]">
+              <span
+                aria-hidden="true"
+                className="inline-block h-3 w-3 rounded-full ring-2"
+                style={{ backgroundColor: 'var(--accent-solid)', boxShadow: '0 0 0 2px var(--ink)' }}
+              />
+              {(() => {
+                const f = agents.find((a) => a.name === flagship);
+                return f ? labelOf(f) : flagship;
+              })()}{' '}
+              (flagship)
+            </span>
+          ) : null}
+          {hasOverBudget ? (
+            <span className="inline-flex items-center gap-1 opacity-70">
+              <span aria-hidden="true" className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: 'var(--ink-muted)' }} />
+              Over budget (off cheap frontier)
+            </span>
+          ) : null}
+        </div>
+      ) : null}
 
       <div
         className="mx-auto w-full"
@@ -522,8 +563,13 @@ export function ParetoPlot({ agents, axis, onAxisChange, flagship }: ParetoPlotP
           Optimality (strength)
         </text>
 
-        {/* frontier line */}
-        {frontier.length >= 1 ? <path d={linePath} fill="none" stroke="var(--ink-2)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" opacity={0.85} /> : null}
+        {/* frontier line -- drawn BEFORE the points loop below (so it's
+            behind every point in z-order) and now thinner + lower-opacity
+            than the old 2.5px/0.85 (vision review: "the heavy frontier line
+            runs straight through the point cluster and through the 'Zero'
+            text label"). It's a reference boundary, not the headline data
+            -- the points are. */}
+        {frontier.length >= 1 ? <path d={linePath} fill="none" stroke="var(--ink-2)" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" opacity={0.4} /> : null}
 
         {/* points */}
         {agents.map((a) => {
@@ -534,7 +580,7 @@ export function ParetoPlot({ agents, axis, onAxisChange, flagship }: ParetoPlotP
           const isFlagship = flagship != null && a.name === flagship;
           const isActive = displayed?.name === a.name;
           const r = isFlagship ? 8 : 5;
-          const flagshipLabel = isFlagship ? flagshipLabelPlacement(cx, r, a.name, W) : null;
+          const flagshipLabel = isFlagship ? flagshipLabelPlacement(cx, r, labelOf(a), W) : null;
           return (
             <g key={a.name}>
               <circle
@@ -564,7 +610,7 @@ export function ParetoPlot({ agents, axis, onAxisChange, flagship }: ParetoPlotP
                 strokeWidth={isFlagship ? 2.5 : 2}
                 tabIndex={0}
                 role="button"
-                aria-label={`${a.name}${isFlagship ? ', flagship' : ''}, ${CAT_LABEL[a.kind]}, optimality ${formatPct(a.optimality)}, ${formatBytes(a.size_bytes)}, ${formatFlops(a.flops_per_move)} FLOPs per move${a.pareto ? ', on the Pareto frontier' : ''}${a.over_budget ? ', over compute budget, excluded from the cheap frontier' : ''}`}
+                aria-label={`${labelOf(a)}${isFlagship ? ', flagship' : ''}, ${CAT_LABEL[a.kind]}, optimality ${formatPct(a.optimality)}, ${formatBytes(a.size_bytes)}, ${formatFlops(a.flops_per_move)} FLOPs per move${a.pareto ? ', on the Pareto frontier' : ''}${a.over_budget ? ', over compute budget, excluded from the cheap frontier' : ''}`}
                 onMouseEnter={() => setActive(a)}
                 onMouseLeave={() => setActive(null)}
                 onFocus={() => setActive(a)}
@@ -574,23 +620,26 @@ export function ParetoPlot({ agents, axis, onAxisChange, flagship }: ParetoPlotP
               {isFlagship && flagshipLabel ? (
                 <text
                   x={flagshipLabel.x}
-                  y={cy + 3}
+                  // Above the point/halo (not level with it): the flagship
+                  // is frequently ON the frontier line (it's usually the
+                  // best cheap agent), and a same-y label used to sit
+                  // directly on top of that line, reading as glued to it
+                  // even with the halo stroke below. Lifting the label clear
+                  // of both the point's halo ring AND the line's y is a real
+                  // callout, not just an in-place color trick.
+                  y={Math.max(10, cy - r - FLAGSHIP_HALO_GAP)}
                   textAnchor={flagshipLabel.anchor}
                   fontSize={10}
                   fontWeight={700}
                   fill="var(--ink)"
-                  // The flagship is frequently ON the frontier line (it's
-                  // usually the best cheap agent), so its label often sits
-                  // right at the line's y -- a plain fill would let the grey
-                  // frontier stroke show through the letterforms as a
-                  // strikethrough. A background-colored halo stroke behind
-                  // the glyphs (paintOrder="stroke") fully occludes the line
-                  // there instead, keeping the label crisp.
+                  // Still keep the halo stroke as a second line of defense
+                  // (a gridline or the axis-break glyph could still cross
+                  // behind the label at some domains).
                   paintOrder="stroke"
                   stroke="var(--surface)"
                   strokeWidth={3}
                 >
-                  {a.name}
+                  {labelOf(a)}
                 </text>
               ) : a.over_budget ? (
                 <text x={cx + r + 5} y={cy + 3} fontSize={9} fill="var(--ink-muted-text)">
@@ -602,28 +651,30 @@ export function ParetoPlot({ agents, axis, onAxisChange, flagship }: ParetoPlotP
         })}
       </svg>
       </div>
-      {/* Rendered as normal HTML (not SVG <text>) so it wraps instead of being
-          clipped by the horizontally-scrolled chart viewport on narrow screens. */}
+      {/* ONE caption line, not three separate paragraphs (vision review: "it
+          needs a 3-paragraph caption to be understood"). Rendered as normal
+          HTML (not SVG <text>) so it still wraps naturally on narrow
+          screens instead of being clipped by the chart viewport; the
+          zoomed-axis honesty note only appears when the zoom is actually
+          active, keeping the common case (unzoomed) even shorter. */}
       <p className="-mt-1 text-center text-[11px] text-[var(--ink-2)]">
-        {axis === 'size'
-          ? 'Artifact size (log scale; 0 = ships no stored artifact)'
-          : 'FLOPs per move (log scale; 0 = no arithmetic declared)'}
+        {axis === 'size' ? 'Size (log scale, 0 = no artifact)' : 'FLOPs/move (log scale, 0 = no arithmetic)'} · Frontier
+        line = cheapest non-dominated agents on this axis
+        {hasOverBudget ? ' (grey = over budget, excluded)' : ''}
+        {yZoomed ? (
+          <>
+            {' '}
+            · y-axis zoomed to {formatYTick(yAxis.domainMin, yAxis.domainMax - yAxis.domainMin)}–
+            {formatYTick(yAxis.domainMax, yAxis.domainMax - yAxis.domainMin)} (⌇ = axis break, not 0%)
+          </>
+        ) : null}
       </p>
-      <p className="-mt-1 text-center text-[11px] text-[var(--ink-2)]">
-        Frontier line = cheapest non-dominated agents on this axis alone; the real ranking weighs optimality, size, AND FLOPs together (3D).
-        {hasOverBudget ? ' Grey points are over the compute budget and excluded from the cheap frontier.' : ''}
-      </p>
-      {yZoomed ? (
-        <p className="-mt-1 text-center text-[11px] text-[var(--ink-muted-text)]">
-          Optimality axis is zoomed to the plotted agents&apos; actual range ({formatYTick(yAxis.domainMin, yAxis.domainMax - yAxis.domainMin)}–{formatYTick(yAxis.domainMax, yAxis.domainMax - yAxis.domainMin)}, marked by the ⌇ break on the axis) — it does not start at 0%.
-        </p>
-      ) : null}
 
       {displayed ? (
         <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 text-sm">
           <div className="flex items-center justify-between gap-2">
             <span className="font-semibold text-[var(--ink)]">
-              {displayed.name}
+              {labelOf(displayed)}
               {flagship != null && displayed.name === flagship ? (
                 <span className="ml-1.5 rounded px-1 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: 'var(--accent-solid)', color: 'var(--accent-solid-ink)' }}>
                   flagship

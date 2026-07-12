@@ -3,14 +3,20 @@ interface StatusBannerProps {
   title: string;
   detail?: string;
   onRetry?: () => void;
+  /** Omit this banner's own border + background. For the (rare) case where
+   * it's already nested inside another bordered/backgrounded card -- e.g.
+   * the Play screen's board panel -- so the two don't stack into a visibly
+   * redundant "card inside a card". */
+  bare?: boolean;
 }
 
-export function StatusBanner({ kind, title, detail, onRetry }: StatusBannerProps) {
+export function StatusBanner({ kind, title, detail, onRetry, bare }: StatusBannerProps) {
   return (
     <div
       role={kind === 'error' ? 'alert' : 'status'}
-      className="flex flex-col items-center justify-center gap-2 rounded-xl border border-[var(--border)]
-        bg-[var(--surface)] px-6 py-10 text-center"
+      className={`flex flex-col items-center justify-center gap-2 rounded-xl px-6 py-10 text-center ${
+        bare ? '' : 'border border-[var(--border)] bg-[var(--surface)]'
+      }`}
     >
       {kind === 'loading' ? (
         <span

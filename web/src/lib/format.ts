@@ -16,10 +16,25 @@ export function formatBytes(bytes: number): string {
   return `${mb % 1 === 0 ? mb : mb.toFixed(2)} MB`;
 }
 
+/** Format a positive number to 3 significant figures (e.g. 50 -> "50.0",
+ * 5 -> "5.00", 168.07 -> "168"). Used below to give every K/M-scaled FLOP
+ * count the SAME precision rule, instead of each magnitude band picking its
+ * own ad-hoc decimal count (the old rule was "0 decimals if an exact
+ * multiple of the unit, else a fixed 1 or 2 decimals" -- which produced
+ * "50M", "5.00M", "168.1K" side by side with no consistent rule a reader
+ * could learn). */
+function sig3(v: number): string {
+  if (v === 0) return '0';
+  const digits = Math.floor(Math.log10(Math.abs(v))) + 1;
+  const decimals = Math.max(0, 3 - digits);
+  return v.toFixed(decimals);
+}
+
 export function formatFlops(flops: number): string {
-  if (flops < 1000) return `${flops}`;
-  if (flops < 1_000_000) return `${(flops / 1000).toFixed(flops % 1000 === 0 ? 0 : 1)}K`;
-  return `${(flops / 1_000_000).toFixed(flops % 1_000_000 === 0 ? 0 : 2)}M`;
+  if (flops < 1000) return `${Math.round(flops)}`;
+  if (flops < 999_500) return `${sig3(flops / 1000)}K`;
+  if (flops < 999_500_000) return `${sig3(flops / 1_000_000)}M`;
+  return `${sig3(flops / 1_000_000_000)}B`;
 }
 
 export function formatPct(fraction: number): string {

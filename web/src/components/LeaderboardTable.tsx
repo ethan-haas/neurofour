@@ -1,4 +1,5 @@
 import type { LeaderboardAgent } from '../types';
+import { Badge } from './Badge';
 import { TIER_LABEL, formatBytes, formatFlops, formatLatency, formatPct, formatScore } from '../lib/format';
 
 interface LeaderboardTableProps {
@@ -18,32 +19,48 @@ export function LeaderboardTable({ agents, flagship }: LeaderboardTableProps) {
       role="region"
       aria-label="Leaderboard table, scrollable"
     >
-      <table className="w-full min-w-[720px] text-left text-sm">
+      <table className="w-full min-w-[760px] text-left text-sm">
         <caption className="sr-only">NeuroFour leaderboard: agents ranked by NeuroFour score.</caption>
+        {/* Explicit column widths (not left to auto-layout): the Agent
+            column previously claimed ~360px of mostly-empty space while five
+            numeric columns fought for what was left, and jammed together.
+            Agent gets a fixed generous-but-bounded share; every numeric
+            column gets an equal fixed share so values align in a clean
+            right-aligned rail. */}
+        <colgroup>
+          <col style={{ width: '30%' }} />
+          <col style={{ width: '9%' }} />
+          <col style={{ width: '11%' }} />
+          <col style={{ width: '10%' }} />
+          <col style={{ width: '12%' }} />
+          <col style={{ width: '10%' }} />
+          <col style={{ width: '10%' }} />
+          <col style={{ width: '8%' }} />
+        </colgroup>
         <thead className="bg-[var(--surface-2)] text-xs uppercase tracking-wide text-[var(--ink-2)]">
           <tr>
-            <th scope="col" className="px-3 py-2 font-medium">
+            <th scope="col" className="whitespace-nowrap px-3 py-2 font-medium">
               Agent
             </th>
-            <th scope="col" className="px-3 py-2 font-medium">
+            <th scope="col" className="whitespace-nowrap px-3 py-2 font-medium">
               Kind
             </th>
-            <th scope="col" className="px-3 py-2 font-medium text-right">
+            <th scope="col" className="whitespace-nowrap px-3 py-2 font-medium text-right">
               Optimality
             </th>
-            <th scope="col" className="px-3 py-2 font-medium text-right">
+            <th scope="col" className="whitespace-nowrap px-3 py-2 font-medium text-right">
               Size
             </th>
-            <th scope="col" className="px-3 py-2 font-medium text-right">
+            <th scope="col" className="whitespace-nowrap px-3 py-2 font-medium text-right">
               FLOPs/move
             </th>
-            <th scope="col" className="px-3 py-2 font-medium text-right">
+            <th scope="col" className="whitespace-nowrap px-3 py-2 font-medium text-right">
               Latency
             </th>
-            <th scope="col" className="px-3 py-2 font-medium text-right">
+            <th scope="col" className="whitespace-nowrap px-3 py-2 font-medium text-right">
               NeuroFour Score
             </th>
-            <th scope="col" className="px-3 py-2 font-medium">
+            <th scope="col" className="whitespace-nowrap px-3 py-2 font-medium">
               Tier
             </th>
           </tr>
@@ -56,26 +73,14 @@ export function LeaderboardTable({ agents, flagship }: LeaderboardTableProps) {
               style={{ backgroundColor: a.name === flagship ? 'var(--surface-2)' : undefined }}
             >
               <th scope="row" className="px-3 py-2 font-medium text-[var(--ink)]">
-                <span className="tabular text-[var(--ink-muted-text)] mr-1.5">{i + 1}.</span>
-                {a.display_name ?? a.name}
-                {a.subtitle ? (
-                  <span className="ml-1.5 font-normal text-[var(--ink-muted-text)]">{a.subtitle}</span>
-                ) : null}
-                {a.name === flagship ? (
-                  <span className="ml-1.5 rounded px-1 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: 'var(--accent-solid)', color: 'var(--accent-solid-ink)' }}>
-                    flagship
-                  </span>
-                ) : null}
-                {a.pareto ? (
-                  <span className="ml-1.5 rounded px-1 py-0.5 text-[10px] font-semibold" style={{ color: 'var(--good-text)', border: '1px solid var(--good)' }}>
-                    pareto
-                  </span>
-                ) : null}
-                {a.over_budget ? (
-                  <span className="ml-1.5 rounded px-1 py-0.5 text-[10px] font-semibold" style={{ color: 'var(--critical)', border: '1px solid var(--critical)' }}>
-                    over budget
-                  </span>
-                ) : null}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="tabular text-[var(--ink-muted-text)]">{i + 1}.</span>
+                  <span>{a.display_name ?? a.name}</span>
+                  {a.subtitle ? <span className="font-normal text-[var(--ink-muted-text)]">{a.subtitle}</span> : null}
+                  {a.name === flagship ? <Badge variant="accent">flagship</Badge> : null}
+                  {a.over_budget ? <Badge variant="warning">over budget</Badge> : null}
+                  {a.pareto ? <Badge variant="good">pareto</Badge> : null}
+                </div>
               </th>
               <td className="px-3 py-2 text-[var(--ink-2)]">{a.kind}</td>
               <td className="px-3 py-2 text-right tabular text-[var(--ink)]">{formatPct(a.optimality)}</td>

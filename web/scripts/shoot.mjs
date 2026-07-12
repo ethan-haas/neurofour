@@ -224,13 +224,65 @@ async function run() {
       await page.getByRole('button', { name: 'Leaderboard' }).click();
       await page.waitForTimeout(400);
       await shoot(page, `leaderboard-${vpName}`, viewport);
+
+      // 6. Agents — the agent-card browser. A screen the judge never sees is a
+      // screen whose defects ship, so every nav destination gets captured at
+      // every viewport we judge, not just the two original screens.
+      // Wait for a real card, NOT a fixed timeout: the screen fetches /agents
+      // on mount, and a short sleep captures the "Loading agents…" spinner --
+      // which reads to a judge as a blank/broken page. That is a defect in the
+      // CAPTURE, not in the app, and it would burn a fix cycle on correct code.
+      await page.getByRole('button', { name: 'Agents' }).click();
+      await page.getByRole('button', { name: /^Play against /, exact: false }).first().waitFor({ timeout: 30000 });
+      await page.waitForTimeout(300);
+      await shoot(page, `agents-${vpName}`, viewport);
+
+      // 7. About — the explainer / hero. Like Agents, its champion stat strip
+      // is fetched, so wait for the real numbers instead of capturing the
+      // "Loading current champion…" spinner.
+      await page.getByRole('button', { name: 'About' }).click();
+      await page.getByText('champion size').waitFor({ timeout: 30000 });
+      await page.waitForTimeout(300);
+      await shoot(page, `about-${vpName}`, viewport);
+
+      // 8. Play — the agent picker OPEN. The picker's stat-bearing option rows
+      // are the headline UI of this build and are invisible in every closed-
+      // state shot, so capture the expanded listbox explicitly.
+      await page.getByRole('button', { name: 'Play' }).click();
+      await page.waitForTimeout(400);
+      await page.getByRole('button', { name: 'Yellow (moves second)', exact: false }).click();
+      await page.waitForTimeout(400);
+      await shoot(page, `play-picker-open-${vpName}`, viewport);
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(200);
     }
 
     // Bonus: dark mode, desktop, leaderboard + mid-game (quality-bar: light+dark aware).
     await page.setViewportSize(VIEWPORTS.desktop);
     await page.getByRole('button', { name: /Switch to dark mode/ }).click();
     await page.waitForTimeout(200);
+    // Navigate EXPLICITLY: the light-mode pass above ends on whatever screen it
+    // last touched (Play, after the picker shot), and a shot named
+    // "leaderboard-dark" that actually captures Play is a checker bug that
+    // reads to a judge as a navigation bug in the app. Never assume the screen
+    // you are on -- assert it.
+    await page.getByRole('button', { name: 'Leaderboard' }).click();
+    await page.getByRole('table').waitFor({ timeout: 30000 });
+    await page.waitForTimeout(400);
     await shoot(page, 'leaderboard-dark-desktop', VIEWPORTS.desktop);
+
+    // Dark mode is where this app's real token bugs have historically lived
+    // (a bright-blue board slab shipped once), so the NEW screens get a dark
+    // pass too -- not just the two that existed before.
+    await page.getByRole('button', { name: 'Agents' }).click();
+    await page.getByRole('button', { name: /^Play against /, exact: false }).first().waitFor({ timeout: 30000 });
+    await page.waitForTimeout(300);
+    await shoot(page, 'agents-dark-desktop', VIEWPORTS.desktop);
+
+    await page.getByRole('button', { name: 'About' }).click();
+    await page.getByText('champion size').waitFor({ timeout: 30000 });
+    await page.waitForTimeout(300);
+    await shoot(page, 'about-dark-desktop', VIEWPORTS.desktop);
 
     await page.getByRole('button', { name: 'Play' }).click();
     await selectAgent(page, 'Yellow (moves second)', opponentDisplayName);
