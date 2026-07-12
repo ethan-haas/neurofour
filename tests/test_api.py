@@ -1,3 +1,6 @@
+import json
+import os
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -19,6 +22,109 @@ def test_agents_list():
     assert {"random", "heuristic", "minimax-2", "minimax-4", "perfect"} <= names
     for a in r.json()["agents"]:
         assert set(a) >= {"name", "kind", "params", "size_bytes", "flops_per_move"}
+
+
+def _walk_strings(obj):
+    """Yield every string value anywhere in a nested dict/list/scalar."""
+    if isinstance(obj, str):
+        yield obj
+    elif isinstance(obj, dict):
+        for v in obj.values():
+            yield from _walk_strings(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            yield from _walk_strings(v)
+
+
+def test_agents_no_server_path_leak():
+    # BUG FIX (info leak): GET /agents previously returned `artifact_path`
+    # as the absolute SERVER filesystem path (e.g.
+    # "/opt/render/project/src/app/agents/artifacts/neurofour-net.npz" in
+    # prod). A public API must never leak server paths. No string value
+    # anywhere in the response may contain a path separator or a
+    # recognisable absolute-path prefix.
+    r = client.get("/agents")
+    assert r.status_code == 200
+    body = r.json()
+    for s in _walk_strings(body):
+        assert "/" not in s, f"path separator leaked in /agents response: {s!r}"
+        assert "\\" not in s, f"path separator leaked in /agents response: {s!r}"
+        assert "/opt/" not in s
+        assert "C:\\" not in s
+    # sanity: at least one artifact-bearing agent exists and its
+    # artifact_path (if present) is just a basename, not None-only for
+    # every agent (would make this test vacuous).
+    net_agents = [a for a in body["agents"] if a["name"] == "neurofour-net"]
+    if net_agents:  # only registered if the artifact file exists locally
+        assert net_agents[0]["artifact_path"] in (None,) or "/" not in net_agents[0]["artifact_path"]
+
+
+def test_agents_display_name_and_stats_merged():
+    r = client.get("/agents")
+    assert r.status_code == 200
+    body = r.json()["agents"]
+    by_name = {a["name"]: a for a in body}
+
+    # A3: canonical display names/subtitles present and correct for known ids.
+    assert by_name["neurofour-net14"]["display_name"] == "Zero"
+    assert by_name["neurofour-net14"]["subtitle"] == "0-byte champion — pure bitboard search"
+    assert by_name["perfect"]["display_name"] == "Oracle"
+    assert by_name["random"]["display_name"] == "Random"
+
+    # every agent has a non-empty display_name and a subtitle key (possibly "")
+    for a in body:
+        assert isinstance(a["display_name"], str) and a["display_name"]
+        assert isinstance(a["subtitle"], str)
+
+    # A2: leaderboard stats merged server-side, present as keys on every row
+    # (null when the agent has no leaderboard row, but the key must exist).
+    stat_keys = {"optimality", "elo", "latency_ms", "neurogolf_score", "tier",
+                 "pareto", "over_budget"}
+    for a in body:
+        assert stat_keys <= set(a)
+
+    # If the committed leaderboard exists, a known agent's stats must be
+    # real numbers (not null) and match the committed file exactly, and
+    # the frozen `neurogolf_score` field name must survive the merge.
+    lb_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "bench_data", "leaderboard.json")
+    if os.path.exists(lb_path):
+        with open(lb_path, "r", encoding="utf-8") as f:
+            lb = json.load(f)
+        lb_by_name = {row["name"]: row for row in lb["agents"]}
+        if "neurofour-net14" in lb_by_name:
+            expected = lb_by_name["neurofour-net14"]
+            got = by_name["neurofour-net14"]
+            assert got["optimality"] == expected["optimality"]
+            assert got["neurogolf_score"] == expected["neurogolf_score"]
+            assert got["tier"] == expected["tier"]
+
+
+def test_agents_unknown_id_falls_back_to_id_never_crashes():
+    from app.agents.display import display_info
+    name, subtitle = display_info("some-brand-new-experimental-agent-id")
+    assert name == "some-brand-new-experimental-agent-id"
+    assert subtitle == ""
+
+
+def test_leaderboard_rows_carry_display_name_too():
+    r = client.get("/leaderboard")
+    assert r.status_code in (200, 404)
+    if r.status_code == 200:
+        body = r.json()
+        for row in body["agents"]:
+            assert "display_name" in row and isinstance(row["display_name"], str) and row["display_name"]
+            assert "subtitle" in row
+        # committed bench_data/leaderboard.json itself must be untouched by
+        # the serve-time injection (it's a derived artifact checked by
+        # run_bench.py --check).
+        lb_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                "bench_data", "leaderboard.json")
+        with open(lb_path, "r", encoding="utf-8") as f:
+            raw = json.load(f)
+        for row in raw["agents"]:
+            assert "display_name" not in row
+            assert "subtitle" not in row
 
 
 def test_new_game_and_human_move():

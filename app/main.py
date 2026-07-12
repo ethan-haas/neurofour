@@ -20,6 +20,7 @@ from starlette.responses import JSONResponse
 
 from app.engine.board import Board, WIDTH, CENTER_ORDER, IllegalMove
 from app.agents import registry
+from app.agents.display import display_info
 from app.agents.heuristic_eval import evaluate as _heuristic_evaluate, WIN_SCORE
 from app.solver.solver import Solver
 from app.neurogolf.config import EXACT_SOLVE_MIN_PLY
@@ -93,6 +94,43 @@ _AGENT_CACHE: dict = {}
 _SOLVER = Solver()
 _GAMES: dict[str, dict] = {}
 _EVAL_CACHE: dict[str, dict] = {}
+
+# stats merged onto each /agents row from bench_data/leaderboard.json (the
+# same file /leaderboard serves) -- null for any of these when the agent has
+# no leaderboard row (never invented, never crashes).
+_LEADERBOARD_STAT_KEYS = (
+    "optimality", "elo", "latency_ms", "neurogolf_score", "tier", "pareto",
+    "over_budget",
+)
+
+# Loaded ONCE (lazily, on first use, then cached) rather than per-request --
+# see A2. `None` means "not loaded yet"; `{}` is a valid loaded-but-empty result
+# (leaderboard.json missing/unbuilt), distinguished by the sentinel below.
+_LEADERBOARD_STATS_CACHE: Optional[dict[str, dict]] = None
+
+
+def _leaderboard_stats_by_name() -> dict[str, dict]:
+    """`{agent_name: {optimality, elo, latency_ms, neurogolf_score, tier,
+    pareto, over_budget}}`, read from `bench_data/leaderboard.json` exactly
+    once per process (module-level cache) and reused for every subsequent
+    `/agents` call. Returns `{}` (never raises) if the file doesn't exist or
+    fails to parse -- that just means every agent's stats come back `null`,
+    not a broken endpoint."""
+    global _LEADERBOARD_STATS_CACHE
+    if _LEADERBOARD_STATS_CACHE is None:
+        stats: dict[str, dict] = {}
+        try:
+            with open(LEADERBOARD_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for row in data.get("agents", []):
+                name = row.get("name")
+                if not name:
+                    continue
+                stats[name] = {k: row.get(k) for k in _LEADERBOARD_STAT_KEYS}
+        except (OSError, ValueError):
+            stats = {}
+        _LEADERBOARD_STATS_CACHE = stats
+    return _LEADERBOARD_STATS_CACHE
 
 
 def _agent(name: str):
@@ -257,10 +295,19 @@ def health():
 
 @app.get("/agents")
 def agents():
+    stats_by_name = _leaderboard_stats_by_name()
     out = []
     for name in registry.agent_names():
-        m = _agent(name).manifest()
-        out.append(m.to_dict())
+        m = _agent(name).manifest().to_dict()
+        display_name, subtitle = display_info(name)
+        m["display_name"] = display_name
+        m["subtitle"] = subtitle
+        # merge strength/cost stats from the leaderboard; null (never
+        # invented/crashed) when this agent has no leaderboard row.
+        row_stats = stats_by_name.get(name)
+        for key in _LEADERBOARD_STAT_KEYS:
+            m[key] = row_stats.get(key) if row_stats is not None else None
+        out.append(m)
     return {"agents": out}
 
 
@@ -505,7 +552,19 @@ def leaderboard():
         raise HTTPException(status_code=404,
                             detail="leaderboard not built; run scripts/run_bench.py")
     with open(LEADERBOARD_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    # Inject display_name/subtitle at serve time -- the committed
+    # bench_data/leaderboard.json file (a derived artifact checked by
+    # run_bench.py --check) is never rewritten on disk; this only decorates
+    # the in-memory response for each request.
+    for row in data.get("agents", []):
+        name = row.get("name")
+        if not name:
+            continue
+        display_name, subtitle = display_info(name)
+        row["display_name"] = display_name
+        row["subtitle"] = subtitle
+    return data
 
 
 @app.post("/evaluate")
