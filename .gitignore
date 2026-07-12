@@ -24,3 +24,6 @@ web/.env.local
 *.log
 .DS_Store
 Thumbs.db
+
+# wrangler local state (contains account id)
+.wrangler/

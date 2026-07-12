@@ -13,7 +13,9 @@ Play a solved game against 20 benchmarked agents, watch an exact solver narrate 
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 
 <!-- LIVE-DEMO -->
-### 🔗 [Live demo](https://neurofour.pages.dev) &nbsp;·&nbsp; the backend cold-starts in ~30–60s on first load
+### 🔗 **[Play it live → neurofour.pages.dev](https://neurofour.pages.dev)**
+
+<sub>Frontend on Cloudflare Pages · API on Render ([`/health`](https://neurofour-api.onrender.com/health)) · the free-tier backend sleeps when idle, so the first request may take ~30–60s to wake</sub>
 <!-- /LIVE-DEMO -->
 
 <img src="docs/img/leaderboard.png" alt="NeuroFour leaderboard — strength vs cost Pareto frontier" width="820">
@@ -138,7 +140,7 @@ make bench                               # regenerate the leaderboard from scrat
 
 ## Deploy your own
 
-This repo is wired for a **static frontend + Python backend** split.
+This repo is wired for a **static frontend + Python backend** split — exactly how the live demo runs (Cloudflare Pages ➜ Render).
 
 **1. Backend → [Render](https://render.com) (free):** push to GitHub, then in Render pick **New ➜ Blueprint** and connect the repo. [`render.yaml`](render.yaml) provisions a `uvicorn app.main:app` web service with a `/health` check. Copy the resulting URL, e.g. `https://neurofour-api.onrender.com`.
 
