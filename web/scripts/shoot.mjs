@@ -40,6 +40,10 @@ const VIEWPORTS = { mobile: { width: 375, height: 850 }, desktop: { width: 1440,
 //  4: -21 (Loss in 8), 5: 22 (Win in 7), 6: -13 (Loss in 16)}.
 const ANALYZE_DEMO_SEQUENCE = [4, 6, 4, 6, 1, 1, 1, 3, 6, 3, 5, 2, 6, 2];
 
+// Display names (app/agents/display.py) for the raw agent ids this script
+// selects by -- the opponent picker now shows display names, not raw ids.
+const DISPLAY_NAME_FOR = { 'neurofour-net14': 'Zero', heuristic: 'Heuristic', 'neurofour-net': 'Policy' };
+
 async function waitForServer(url, timeoutMs = 30000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -92,6 +96,15 @@ async function pickWorkingOpponent(preferred, fallback) {
   }
 }
 
+// NewGamePanel's opponent pickers are an accessible custom listbox
+// (AgentPicker.tsx), not a native <select> -- open the picker by its visible
+// label, then click the option whose visible text matches `optionName` (a
+// display name, e.g. "Zero"/"You (human)", not necessarily the raw agent id).
+async function selectAgent(page, pickerLabel, optionName) {
+  await page.getByRole('button', { name: pickerLabel, exact: false }).click();
+  await page.getByRole('option', { name: optionName, exact: false }).first().click();
+}
+
 async function clickColumn(page, colNumber) {
   await page.getByRole('button', { name: new RegExp(`^Drop disc in column ${colNumber}\\b`) }).click();
   await page.waitForTimeout(1000);
@@ -107,7 +120,8 @@ async function run() {
 
   const useMock = !(await backendReachable());
   console.log(useMock ? 'Backend not reachable — using stubbed fetch layer for screenshots.' : 'Backend reachable — using live data.');
-  const opponent = useMock ? 'neurofour-net' : await pickWorkingOpponent('neurofour-net', 'heuristic');
+  const opponent = useMock ? 'neurofour-net14' : await pickWorkingOpponent('neurofour-net14', 'heuristic');
+  const opponentDisplayName = DISPLAY_NAME_FOR[opponent] ?? opponent;
 
   // A stale preview server from an unrelated project can already be bound to
   // PREVIEW_PORT (seen in practice: another workspace's `vite preview` left
@@ -144,7 +158,7 @@ async function run() {
       await shoot(page, `play-empty-${vpName}`, viewport);
 
       // Start a human (Red) vs `opponent` (Yellow) game.
-      await page.getByLabel('Yellow (moves second)').selectOption(opponent);
+      await selectAgent(page, 'Yellow (moves second)', opponentDisplayName);
       await page.getByRole('button', { name: 'New game' }).click();
       await page.waitForTimeout(500);
 
@@ -171,7 +185,7 @@ async function run() {
       // EXACT_SOLVE_MIN_PLY, so /analyze takes the audited exact-solver path
       // and returns a genuine mix of Win/Draw/Loss columns with real mate
       // -distance numbers.
-      await page.getByLabel('Yellow (moves second)').selectOption({ label: 'You (human)' });
+      await selectAgent(page, 'Yellow (moves second)', 'You (human)');
       await page.getByRole('button', { name: 'New game' }).click();
       await page.waitForTimeout(400);
       for (const col of ANALYZE_DEMO_SEQUENCE) {
@@ -193,7 +207,7 @@ async function run() {
       // Use a fresh human-vs-human game instead so the win is deterministic
       // regardless of any agent's policy, while still driving the real
       // backend end-to-end (both sides are just /game/move calls).
-      await page.getByLabel('Yellow (moves second)').selectOption({ label: 'You (human)' });
+      await selectAgent(page, 'Yellow (moves second)', 'You (human)');
       await page.getByRole('button', { name: 'New game' }).click();
       await page.waitForTimeout(400);
       await clickColumn(page, 1);
@@ -219,7 +233,7 @@ async function run() {
     await shoot(page, 'leaderboard-dark-desktop', VIEWPORTS.desktop);
 
     await page.getByRole('button', { name: 'Play' }).click();
-    await page.getByLabel('Yellow (moves second)').selectOption(opponent);
+    await selectAgent(page, 'Yellow (moves second)', opponentDisplayName);
     await page.getByRole('button', { name: 'New game' }).click();
     await page.waitForTimeout(500);
     await clickColumn(page, 1);

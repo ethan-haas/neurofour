@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { selectAgent } from './fixtures';
 
 // Regression test for the "Analyze toggle is a dead control" escape.
 //
@@ -22,8 +23,10 @@ test.setTimeout(120_000);
 
 async function setupMidgame(page: Page) {
   await page.goto('/');
-  await page.locator('select').nth(0).selectOption({ label: 'You (human)' });
-  await page.locator('select').nth(1).selectOption({ label: 'perfect' });
+  await selectAgent(page, 'Red (moves first)', 'You (human)');
+  // "perfect" now displays as "Oracle" (app/agents/display.py) -- select by
+  // its real display name, not the raw agent id.
+  await selectAgent(page, 'Yellow (moves second)', 'Oracle');
   await page.getByRole('button', { name: 'New game' }).click();
   await expect(page.getByText('Red to move (You)')).toBeVisible({ timeout: 15_000 });
   await page.getByRole('button', { name: 'Drop disc in column 4' }).click();

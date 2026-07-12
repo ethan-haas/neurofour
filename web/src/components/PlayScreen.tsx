@@ -46,7 +46,14 @@ function buildMoveHistory(moves: number[]): { ply: number; player: 1 | 2; col: n
   return moves.map((col, i) => ({ ply: i + 1, player: (i % 2 === 0 ? 1 : 2) as 1 | 2, col }));
 }
 
-export function PlayScreen() {
+interface PlayScreenProps {
+  /** Preselect this agent as the opponent -- set by the Agents screen's
+   * "Play" button (via App.tsx), cleared automatically once the user
+   * navigates to any screen other than Play (see App.tsx::handleScreen). */
+  presetOpponent?: string | null;
+}
+
+export function PlayScreen({ presetOpponent }: PlayScreenProps = {}) {
   const agentsState = useAgents();
   const { game, loading, busy, error, newGame, playMove, requestAgentMove, clearError } = useGame();
   const reducedMotion = usePrefersReducedMotion();
@@ -204,6 +211,14 @@ export function PlayScreen() {
 
   const humanCanPlay = Boolean(game) && game!.status === 'in_progress' && !game!.to_move_is_agent && !busy;
 
+  // NOTE: `presetOpponent` is intentionally NOT cleared here. NewGamePanel's
+  // own agents-loading gate (the StatusBanner branch below) can mount well
+  // after this component's first commit -- clearing the preset eagerly on
+  // PlayScreen's own mount raced NewGamePanel's later mount and cleared the
+  // preset before it was ever read. App.tsx's `handleScreen` already clears
+  // `presetOpponent` whenever the user navigates to any screen OTHER than
+  // Play, which is the only time it needs to stop applying.
+
   return (
     // Desktop (lg): the row's two columns are laid out as a `flex-row` with
     // BOTH columns sized to their own content (`flex-none`, not a
@@ -256,7 +271,12 @@ export function PlayScreen() {
         ) : agentsState.data.length === 0 ? (
           <StatusBanner kind="empty" title="No agents registered yet" onRetry={agentsState.reload} />
         ) : (
-          <NewGamePanel agents={agentsState.data} onStart={handleStart} busy={loading} />
+          <NewGamePanel
+            agents={agentsState.data}
+            onStart={handleStart}
+            busy={loading}
+            presetOpponent={presetOpponent}
+          />
         )}
 
         {game ? (

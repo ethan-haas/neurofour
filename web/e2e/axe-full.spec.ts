@@ -83,6 +83,28 @@ test.describe('Full WCAG 2.1 A/AA axe scan — Play + Leaderboard x viewport x t
         await scanNoSeriousOrCritical(page);
         assertClean(buffers);
       });
+
+      test(`Agents @ ${viewport.width}px, ${theme}`, async ({ mockedPage: page }) => {
+        await page.setViewportSize(viewport);
+        const buffers = watchForErrors(page);
+        await page.reload();
+        await setTheme(page, theme);
+        await page.getByRole('button', { name: 'Agents' }).click();
+        await page.waitForTimeout(150);
+        await scanNoSeriousOrCritical(page);
+        assertClean(buffers);
+      });
+
+      test(`About @ ${viewport.width}px, ${theme}`, async ({ mockedPage: page }) => {
+        await page.setViewportSize(viewport);
+        const buffers = watchForErrors(page);
+        await page.reload();
+        await setTheme(page, theme);
+        await page.getByRole('button', { name: 'About' }).click();
+        await page.waitForTimeout(150);
+        await scanNoSeriousOrCritical(page);
+        assertClean(buffers);
+      });
     }
   }
 });

@@ -12,6 +12,13 @@ export type PlayerId = 1 | 2;
 
 export type AgentKind = 'table' | 'nn' | 'search' | 'heuristic' | 'random';
 
+export type BudgetTier = 'nano' | 'micro' | 'mini' | 'small' | 'open';
+
+/** GET /agents now enriches the manifest server-side (app/main.py::agents)
+ * with a display name/subtitle (app/agents/display.py) and, when the agent
+ * has a row in bench_data/leaderboard.json, its strength/cost stats. Any
+ * agent with no leaderboard row gets `null` for every stat field below --
+ * never fabricated. */
 export interface AgentManifest {
   name: string;
   kind: AgentKind;
@@ -19,6 +26,17 @@ export interface AgentManifest {
   size_bytes: number;
   flops_per_move: number;
   artifact_path?: string | null;
+  display_name: string;
+  subtitle: string;
+  optimality: number | null;
+  elo: number | null;
+  latency_ms: number | null;
+  /** Frozen wire field name (run_bench.py --check contract) -- never
+   * rendered as the literal string "NeuroGolf" anywhere in the UI. */
+  neurogolf_score: number | null;
+  tier: BudgetTier | null;
+  pareto: boolean | null;
+  over_budget: boolean | null;
 }
 
 /** Raw wire shape of GET /agents. */
@@ -94,8 +112,6 @@ export interface AnalyzeResult {
   is_draw?: boolean;
 }
 
-export type BudgetTier = 'nano' | 'micro' | 'mini' | 'small' | 'open';
-
 export interface LeaderboardAgent {
   name: string;
   kind: AgentKind;
@@ -114,6 +130,11 @@ export interface LeaderboardAgent {
   over_budget: boolean;
   qualifies_micro?: boolean;
   per_outcome?: Record<string, { n: number; optimality: number }>;
+  /** Injected at serve time by GET /leaderboard (app/main.py) from
+   * app/agents/display.py -- never persisted into the committed
+   * bench_data/leaderboard.json artifact. */
+  display_name?: string;
+  subtitle?: string;
 }
 
 export interface FrontierBySizePoint {

@@ -1,18 +1,31 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { AgentManifest } from '../types';
+import { AgentPicker, HUMAN } from './AgentPicker';
 
 interface NewGamePanelProps {
   agents: AgentManifest[];
   onStart: (firstAgent: string | null, secondAgent: string | null) => void;
   busy?: boolean;
+  /** Preselect this agent as the opponent (Yellow) -- e.g. when the user
+   * clicked "Play" on a card in the Agents screen. */
+  presetOpponent?: string | null;
 }
 
-const HUMAN = '__human__';
-
-export function NewGamePanel({ agents, onStart, busy }: NewGamePanelProps) {
-  const defaultOpponent = agents.find((a) => a.name === 'neurofour-net')?.name ?? agents[0]?.name ?? '';
+export function NewGamePanel({ agents, onStart, busy, presetOpponent }: NewGamePanelProps) {
+  // Default opponent = the 0-byte champion ("Zero"), falling back to the
+  // first registered agent if it isn't present (e.g. a stripped-down local
+  // registry).
+  const defaultOpponent =
+    agents.find((a) => a.name === 'neurofour-net14')?.name ?? agents[0]?.name ?? '';
   const [first, setFirst] = useState<string>(HUMAN);
-  const [second, setSecond] = useState<string>(defaultOpponent);
+  const [second, setSecond] = useState<string>(presetOpponent ?? defaultOpponent);
+
+  // A later "Play" click on an Agents-screen card re-preselects the
+  // opponent even after this panel already mounted once.
+  useEffect(() => {
+    if (presetOpponent) setSecond(presetOpponent);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [presetOpponent]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,36 +40,20 @@ export function NewGamePanel({ agents, onStart, busy }: NewGamePanelProps) {
       className="flex flex-col gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
     >
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="grid grid-rows-[2.75rem_auto] gap-1 text-sm">
-          <span className="flex items-end font-medium text-[var(--ink)]">Red (moves first)</span>
-          <select
-            value={first}
-            onChange={(e) => setFirst(e.target.value)}
-            className="rounded-md border border-[var(--border-strong)] bg-[var(--surface)] px-2 py-1.5 text-[var(--ink)]"
-          >
-            <option value={HUMAN}>You (human)</option>
-            {agents.map((a) => (
-              <option key={a.name} value={a.name}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="grid grid-rows-[2.75rem_auto] gap-1 text-sm">
-          <span className="flex items-end font-medium text-[var(--ink)]">Yellow (moves second)</span>
-          <select
-            value={second}
-            onChange={(e) => setSecond(e.target.value)}
-            className="rounded-md border border-[var(--border-strong)] bg-[var(--surface)] px-2 py-1.5 text-[var(--ink)]"
-          >
-            <option value={HUMAN}>You (human)</option>
-            {agents.map((a) => (
-              <option key={a.name} value={a.name}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <AgentPicker
+          id="first-agent"
+          label="Red (moves first)"
+          agents={agents}
+          value={first}
+          onChange={setFirst}
+        />
+        <AgentPicker
+          id="second-agent"
+          label="Yellow (moves second)"
+          agents={agents}
+          value={second}
+          onChange={setSecond}
+        />
       </div>
 
       <div className="flex items-center justify-between gap-3">

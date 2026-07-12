@@ -8,17 +8,26 @@
 export const ROWS = 6;
 export const COLS = 7;
 
-export const MOCK_AGENTS = [
-  { name: 'random', kind: 'random', params: 0, size_bytes: 0, flops_per_move: 7, artifact_path: null },
-  { name: 'heuristic', kind: 'heuristic', params: 0, size_bytes: 0, flops_per_move: 490, artifact_path: null },
-  { name: 'minimax-2', kind: 'search', params: 0, size_bytes: 0, flops_per_move: 3430, artifact_path: null },
-  { name: 'minimax-4', kind: 'search', params: 0, size_bytes: 0, flops_per_move: 168070, artifact_path: null },
-  { name: 'neurofour-net', kind: 'nn', params: 33031, size_bytes: 25603, flops_per_move: 66251, artifact_path: 'app/agents/artifacts/neurofour-net.npz' },
-  { name: 'perfect', kind: 'search', params: 0, size_bytes: 0, flops_per_move: 50_000_000, artifact_path: null },
-];
+// Mirrors app/agents/display.py's canonical id -> (display_name, subtitle)
+// map for exactly the ids this mock roster uses -- kept in sync by hand
+// (small, static list), same as every other piece of this file mirroring the
+// real backend's wire shape.
+const DISPLAY_NAMES = {
+  random: ['Random', 'Picks any legal column'],
+  heuristic: ['Heuristic', 'One-ply pattern score'],
+  'minimax-2': ['Minimax-2', 'Depth-2 search'],
+  'minimax-4': ['Minimax-4', 'Depth-4 search'],
+  perfect: ['Oracle', 'Exact solver — perfect play'],
+  'neurofour-net14': ['Zero', '0-byte champion — pure bitboard search'],
+  'neurofour-net': ['Policy', 'Original policy network'],
+};
 
 const MOCK_LEADERBOARD_AGENTS = [
   { name: 'perfect', kind: 'search', optimality: 1.0, blunder_rate: 0.0, soundness: 1.0, size_bytes: 0, params: 0, flops_per_move: 50_000_000, flops_plausible: true, latency_ms: 0.003, over_budget: true, tier: 'nano', qualifies_micro: false, neurogolf_score: 100.0, elo: 1213, pareto: true },
+  // The 0-byte champion: highest optimality among micro-qualifying (in
+  // -budget) agents, mirroring the real backend's actual headline shape
+  // (search beats a small learned net under the fixed FLOP budget).
+  { name: 'neurofour-net14', kind: 'search', optimality: 0.96, blunder_rate: 0.01, soundness: 0.99, size_bytes: 0, params: 0, flops_per_move: 4_999_028, flops_plausible: true, latency_ms: 0.017, over_budget: false, tier: 'nano', qualifies_micro: true, neurogolf_score: 96.45, elo: 754, pareto: true },
   { name: 'minimax-4', kind: 'search', optimality: 0.936667, blunder_rate: 0.02, soundness: 0.98, size_bytes: 0, params: 0, flops_per_move: 168070, flops_plausible: true, latency_ms: 0.525, over_budget: false, tier: 'nano', qualifies_micro: true, neurogolf_score: 94.317, elo: 1064, pareto: true },
   { name: 'minimax-2', kind: 'search', optimality: 0.903333, blunder_rate: 0.03, soundness: 0.97, size_bytes: 0, params: 0, flops_per_move: 3430, flops_plausible: true, latency_ms: 0.05, over_budget: false, tier: 'nano', qualifies_micro: true, neurogolf_score: 91.234, elo: 936, pareto: true },
   { name: 'heuristic', kind: 'heuristic', optimality: 0.9, blunder_rate: 0.03, soundness: 0.96, size_bytes: 0, params: 0, flops_per_move: 490, flops_plausible: true, latency_ms: 0.01, over_budget: false, tier: 'nano', qualifies_micro: true, neurogolf_score: 90.1, elo: 808, pareto: true },
@@ -30,8 +39,34 @@ const MOCK_LEADERBOARD_AGENTS = [
   { name: 'random', kind: 'random', optimality: 0.263333, blunder_rate: 0.74, soundness: 0.3, size_bytes: 0, params: 0, flops_per_move: 7, flops_plausible: true, latency_ms: 0.001, over_budget: false, tier: 'nano', qualifies_micro: true, neurogolf_score: 24.0, elo: 0, pareto: true },
 ];
 
+const STAT_KEYS = ['optimality', 'elo', 'latency_ms', 'neurogolf_score', 'tier', 'pareto', 'over_budget'];
+const LEADERBOARD_BY_NAME = Object.fromEntries(MOCK_LEADERBOARD_AGENTS.map((a) => [a.name, a]));
+
+function agentManifest(name, kind, params, size_bytes, flops_per_move, artifact_path) {
+  const [display_name, subtitle] = DISPLAY_NAMES[name] ?? [name, ''];
+  const row = LEADERBOARD_BY_NAME[name];
+  const stats = Object.fromEntries(STAT_KEYS.map((k) => [k, row ? row[k] : null]));
+  return { name, kind, params, size_bytes, flops_per_move, artifact_path, display_name, subtitle, ...stats };
+}
+
+// Mirrors GET /agents' real enriched shape (app/main.py::agents): display
+// name/subtitle + leaderboard stats merged server-side.
+export const MOCK_AGENTS = [
+  agentManifest('random', 'random', 0, 0, 7, null),
+  agentManifest('heuristic', 'heuristic', 0, 0, 490, null),
+  agentManifest('minimax-2', 'search', 0, 0, 3430, null),
+  agentManifest('minimax-4', 'search', 0, 0, 168070, null),
+  agentManifest('neurofour-net', 'nn', 33031, 25603, 66251, 'app/agents/artifacts/neurofour-net.npz'),
+  agentManifest('neurofour-net14', 'search', 0, 0, 4_999_028, null),
+  agentManifest('perfect', 'search', 0, 0, 50_000_000, null),
+];
+
 export const MOCK_LEADERBOARD = {
   seed: 4,
+  // Kept as minimax-4 (not neurofour-net14) so this mock's flagship stays the
+  // one leaderboard.spec.ts already pins by name -- adding neurofour-net14 to
+  // the roster (for the Play screen's new default-opponent behavior) must
+  // not silently change which mock agent is "the" flagship.
   headline: { metric: 'optimality', value: 0.936667, agent: 'minimax-4', tier: 'nano' },
   auc_strength_logsize: 0.0,
   tiers: {

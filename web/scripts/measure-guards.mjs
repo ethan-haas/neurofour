@@ -8,6 +8,14 @@ import { chromium } from '@playwright/test';
 
 const PREVIEW_URL = process.env.PREVIEW_URL ?? 'http://localhost:4173';
 
+// NewGamePanel's opponent pickers are an accessible custom listbox
+// (AgentPicker.tsx), not a native <select> -- open by visible label, click
+// the option by its visible text.
+async function selectAgent(page, pickerLabel, optionName) {
+  await page.getByRole('button', { name: pickerLabel, exact: false }).click();
+  await page.getByRole('option', { name: optionName, exact: false }).first().click();
+}
+
 async function measure(viewport) {
   const browser = await chromium.launch();
   const context = await browser.newContext({ reducedMotion: 'reduce' });
@@ -17,7 +25,7 @@ async function measure(viewport) {
 
   // Start a human vs human game, drop a few stones, turn Analyze on so both
   // the toolbar badges AND the board disc-cell grid are rendered together.
-  await page.getByLabel('Yellow (moves second)').selectOption({ label: 'You (human)' });
+  await selectAgent(page, 'Yellow (moves second)', 'You (human)');
   await page.getByRole('button', { name: 'New game' }).click();
   await page.waitForTimeout(400);
   for (const col of [4, 6, 4, 6, 1, 1, 1, 3, 6, 3, 5, 2, 6, 2]) {

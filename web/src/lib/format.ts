@@ -1,3 +1,13 @@
+import type { BudgetTier } from '../types';
+
+export const TIER_LABEL: Record<BudgetTier, string> = {
+  nano: 'Nano ≤4KB',
+  micro: 'Micro ≤32KB',
+  mini: 'Mini ≤256KB',
+  small: 'Small ≤2MB',
+  open: 'Open',
+};
+
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   const kb = bytes / 1024;

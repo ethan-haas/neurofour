@@ -416,7 +416,7 @@ export function ParetoPlot({ agents, axis, onAxisChange, flagship }: ParetoPlotP
               className="inline-block h-3 w-3 rounded-full ring-2"
               style={{ backgroundColor: 'var(--accent-solid)', boxShadow: '0 0 0 2px var(--ink)' }}
             />
-            {flagship} (flagship)
+            {agents.find((a) => a.name === flagship)?.display_name ?? flagship} (flagship)
           </span>
         ) : null}
         {hasOverBudget ? (

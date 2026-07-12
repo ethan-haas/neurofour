@@ -1,5 +1,5 @@
 import type { LeaderboardAgent } from '../types';
-import { formatBytes, formatFlops, formatLatency, formatPct, formatScore } from '../lib/format';
+import { TIER_LABEL, formatBytes, formatFlops, formatLatency, formatPct, formatScore } from '../lib/format';
 
 interface LeaderboardTableProps {
   agents: LeaderboardAgent[];
@@ -7,14 +7,6 @@ interface LeaderboardTableProps {
    * by the caller — never hardcoded here. */
   flagship?: string | null;
 }
-
-const TIER_LABEL: Record<LeaderboardAgent['tier'], string> = {
-  nano: 'Nano ≤4KB',
-  micro: 'Micro ≤32KB',
-  mini: 'Mini ≤256KB',
-  small: 'Small ≤2MB',
-  open: 'Open',
-};
 
 export function LeaderboardTable({ agents, flagship }: LeaderboardTableProps) {
   const sorted = [...agents].sort((a, b) => b.neurogolf_score - a.neurogolf_score);
@@ -65,7 +57,10 @@ export function LeaderboardTable({ agents, flagship }: LeaderboardTableProps) {
             >
               <th scope="row" className="px-3 py-2 font-medium text-[var(--ink)]">
                 <span className="tabular text-[var(--ink-muted-text)] mr-1.5">{i + 1}.</span>
-                {a.name}
+                {a.display_name ?? a.name}
+                {a.subtitle ? (
+                  <span className="ml-1.5 font-normal text-[var(--ink-muted-text)]">{a.subtitle}</span>
+                ) : null}
                 {a.name === flagship ? (
                   <span className="ml-1.5 rounded px-1 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: 'var(--accent-solid)', color: 'var(--accent-solid-ink)' }}>
                     flagship
