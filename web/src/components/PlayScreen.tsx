@@ -302,7 +302,7 @@ export function PlayScreen({ presetOpponent }: PlayScreenProps = {}) {
               <span className="font-medium text-[var(--ink)]">Status</span>
               <span className="font-medium text-[var(--ink-2)]">
                 {game.status === 'in_progress'
-                  ? `${game.player_to_move === 1 ? 'Red' : 'Yellow'} to move (${playerLabel(game, game.player_to_move, agentsList)})`
+                  ? `${game.player_to_move === 1 ? 'Red' : 'Yellow'} to move (${playerLabel(game, game.player_to_move ?? 1, agentsList)})`
                   : game.status === 'draw'
                     ? 'Draw'
                     : `${game.winner === 1 ? 'Red' : 'Yellow'} won`}

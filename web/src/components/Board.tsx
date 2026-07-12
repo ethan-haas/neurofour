@@ -5,7 +5,9 @@ import { EMPTY_BOARD_COLS, EMPTY_BOARD_ROWS } from '../lib/format';
 interface BoardProps {
   board: BoardGrid;
   legalMoves: number[];
-  toMove: PlayerId;
+  /** Null on a terminal board (no side to move); only used for the hover
+   * drop-preview color, which never renders when the board is finished. */
+  toMove: PlayerId | null;
   status: GameStatus;
   winner: 0 | PlayerId;
   /** [row, col] pairs, as returned by the backend. */
@@ -364,7 +366,7 @@ export function Board({
           without that intrinsic-content-width behavior, so the sr-only
           1x1px clip actually constrains it. */}
       <div className="sr-only" role="table" aria-label={`Connect Four board, row 1 is the top, row ${EMPTY_BOARD_ROWS} is the bottom. Turn: ${
-        status === 'in_progress' ? `${playerName(toMove)} to move` : status === 'draw' ? 'draw' : `${playerName(winner)} won`
+        status === 'in_progress' ? `${playerName(toMove ?? 0)} to move` : status === 'draw' ? 'draw' : `${playerName(winner)} won`
       }.`}
       >
         {board.map((row, r) => (

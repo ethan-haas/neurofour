@@ -456,3 +456,41 @@ def test_leaderboard_endpoint():
     if r.status_code == 200:
         body = r.json()
         assert "agents" in body and "headline" in body
+
+
+def test_won_game_reports_no_legal_moves_or_player_to_move():
+    """Terminal-state invariant: a finished game must not advertise live moves.
+
+    Regression for the escape where `legal_moves`/`player_to_move` were derived
+    from column-fullness alone, so a WON game (board not full) still reported
+    all open columns as legal and a live side to move -- letting a client offer
+    a move the /move endpoint then 400s. Terminal status is the source of truth.
+    """
+    r = client.post("/game/new", json={})
+    gid = r.json()["id"]
+    # Human plays a vertical 4-in-column-0 win (opponent answers in column 1).
+    last = None
+    for col in [0, 1, 0, 1, 0, 1, 0]:
+        last = client.post(f"/game/{gid}/move", json={"col": col}).json()
+    assert last["status"] == "won"
+    assert last["winner"] == 1
+    assert last["legal_moves"] == []
+    assert last["player_to_move"] is None
+    assert last["to_move_is_agent"] is False
+    assert last["to_move_agent"] is None
+    # GET must agree with the move response.
+    s = client.get(f"/game/{gid}").json()
+    assert s["legal_moves"] == []
+    assert s["player_to_move"] is None
+    # A move on the finished game is still correctly rejected.
+    assert client.post(f"/game/{gid}/move", json={"col": 2}).status_code == 400
+
+
+def test_in_progress_game_still_reports_legal_moves():
+    """Guard the fix: a live game must STILL report its open columns + mover."""
+    r = client.post("/game/new", json={})
+    gid = r.json()["id"]
+    s = client.post(f"/game/{gid}/move", json={"col": 3}).json()
+    assert s["status"] == "in_progress"
+    assert s["legal_moves"] == [0, 1, 2, 3, 4, 5, 6]
+    assert s["player_to_move"] == 2

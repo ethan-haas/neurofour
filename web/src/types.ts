@@ -66,8 +66,12 @@ export interface GameState {
   board: BoardGrid;
   key: string;
   moves: number[];
+  /** Empty once the game is terminal (won/draw) — the server derives this
+   * from the terminal status, not column-fullness, so a finished game never
+   * advertises a "legal" move. */
   legal_moves: number[];
-  player_to_move: PlayerId;
+  /** Null once the game is terminal — no side is to move on a finished game. */
+  player_to_move: PlayerId | null;
   to_move_is_agent: boolean;
   to_move_agent: string | null;
   first_agent: string | null;

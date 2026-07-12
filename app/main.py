@@ -177,15 +177,24 @@ def _state(game_id: str) -> dict:
         status = "draw"
     else:
         status = "in_progress"
+    terminal = status != "in_progress"
+    # A finished game has NO legal moves and NO side to move -- `legal_moves`
+    # and `player_to_move` are game-state fields the client trusts, so they
+    # must be derived from the single source of truth (the terminal status),
+    # not from column-fullness alone. `Board.legal_moves()` only knows which
+    # columns aren't full, so after a WIN it still reports open columns (a
+    # draw happens to fill the board, which is why only wins exposed this).
+    # Reporting live moves on a won game let a UI offer a move that the /move
+    # endpoint then correctly 400s -- two sources of truth disagreeing.
     ptm = b.player_to_move()
-    side_agent = g["first_agent"] if ptm == 1 else g["second_agent"]
+    side_agent = None if terminal else (g["first_agent"] if ptm == 1 else g["second_agent"])
     return {
         "id": game_id,
         "board": b.cells(),
         "key": b.to_key(),
         "moves": g["history"],
-        "legal_moves": b.legal_moves(),
-        "player_to_move": ptm,
+        "legal_moves": [] if terminal else b.legal_moves(),
+        "player_to_move": None if terminal else ptm,
         "to_move_is_agent": side_agent is not None,
         "to_move_agent": side_agent,
         "first_agent": g["first_agent"],
