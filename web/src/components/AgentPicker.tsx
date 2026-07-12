@@ -24,7 +24,14 @@ interface AgentPickerProps {
 }
 
 function buildOptions(agents: AgentManifest[]): AgentOption[] {
-  return [{ value: HUMAN, agent: null }, ...agents.map((a) => ({ value: a.name, agent: a }))];
+  // The menu header states the list is "ranked by NeuroFour score", so it must
+  // actually BE ranked -- the API returns agents in registry order, which put
+  // the 0-byte champion ("Zero") in the middle of the list and made the header
+  // a lie. Sort by neurogolf_score descending (the same score the leaderboard
+  // ranks by); agents without a scored leaderboard row sort last, ties keep
+  // their incoming order. "You (human)" always stays pinned first.
+  const ranked = [...agents].sort((a, b) => (b.neurogolf_score ?? -Infinity) - (a.neurogolf_score ?? -Infinity));
+  return [{ value: HUMAN, agent: null }, ...ranked.map((a) => ({ value: a.name, agent: a }))];
 }
 
 /** Stat "chips" shown on each option row. Previously these were a loose

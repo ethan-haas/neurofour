@@ -15,7 +15,7 @@ export function AboutScreen() {
           How much Connect Four strength fits in a byte?
         </h1>
         <p className="text-balance max-w-xl text-sm text-[var(--ink-2)] sm:text-base">
-          NeuroFour ranks Connect Four agents not by raw strength alone, but by strength <em>per byte and per FLOP</em> --
+          NeuroFour ranks Connect Four agents not by raw strength alone, but by strength <em>per byte and per FLOP</em> —
           under a fixed compute budget, the smartest small agent wins.
         </p>
 
@@ -54,13 +54,14 @@ export function AboutScreen() {
           non-losing one was available). Those combine with the agent's artifact size into one composite:
         </p>
         <pre
-          className="overflow-x-auto rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 pr-5 text-sm text-[var(--ink)]"
-          tabIndex={0}
+          className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 text-[11px] leading-relaxed text-[var(--ink)]
+            whitespace-pre-wrap break-words sm:text-sm"
           role="region"
-          aria-label="NeuroFour Score formula, scrollable on narrow viewports"
+          aria-label="NeuroFour Score formula"
         >
-          {`NeuroFour Score = 100 * (0.85 * optimality + 0.15 * soundness)
-                  / (1 + 0.15 * log2(1 + size_kb))`}
+          {`NeuroFour Score =
+  100 * (0.85 * optimality + 0.15 * soundness)
+      / (1 + 0.15 * log2(1 + size_kb))`}
         </pre>
         <p className="text-sm text-[var(--ink-2)]">
           The denominator is a size penalty: it barely dents the score for a tiny agent, but grows (logarithmically) as
