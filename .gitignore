@@ -27,3 +27,6 @@ Thumbs.db
 
 # wrangler local state (contains account id)
 .wrangler/
+
+# internal build/process notes — never ship in the public repo
+STATUS-*.md

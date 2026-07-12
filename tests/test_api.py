@@ -402,7 +402,7 @@ def test_analyze_post_terminal_move_sequence_reports_correct_winner():
 
 def test_analyze_edge_column_opening_is_correctly_bad_for_the_opener():
     # Root-cause regression for the web/shots/play-analyze-desktop.png
-    # anomaly: a vision judge flagged a screenshot where EVERY column showed
+    # anomaly: a design review flagged a screenshot where EVERY column showed
     # "Loss" after Red opened (and doubled down) on an edge column while
     # Yellow claimed the center twice. That was NOT a rendering bug -- it is
     # the game-theoretically correct call. Per solved Connect-Four opening

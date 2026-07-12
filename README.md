@@ -28,15 +28,15 @@ Play a solved game against 20 benchmarked agents, watch an exact solver narrate 
 
 Connect 4 is a **solved game** — perfect play is known. So a perfect agent scores 1.000 optimality. But NeuroFour doesn't rank on strength alone; it ranks on the **NeuroFour Score**, which rewards being strong *for how little you cost* (bytes, FLOPs, latency) under a hard **5M-FLOP-per-move compute budget**.
 
-Under that budget, the leaderboard champion is **`neurofour-net14` — a 0-byte, 0-parameter agent.** No neural network. It's pure bitboard alpha-beta search with a hand-derived heuristic leaf, and at **0.960 optimality it beats every trained network in the arena** (the best learned net, `net16s`, manages 0.950 at 2,867 bytes).
+Under that budget, the leaderboard champion is **Zero — a 0-byte, 0-parameter agent.** No neural network. It's pure bitboard alpha-beta search with a hand-derived heuristic leaf, and at **0.960 optimality it beats every trained network in the arena** (the best learned net, **Compressed+**, manages 0.950 at 2,867 bytes).
 
 | Rank | Agent | Optimality | Size | FLOPs/move | NeuroFour Score | What it is |
 |-----:|-------|-----------:|-----:|-----------:|----------------:|------------|
-| — | `perfect` | 1.000 | 0 B | 50.0M | 100.00 | Exact solver — **over the 5M-FLOP budget**, so ineligible for the headline |
-| **1** | **`neurofour-net14`** | **0.960** | **0 B** | 5.0M | **96.45** | **Zero-byte bitboard search — the champion** |
-| 2 | `minimax-4` | 0.937 | 0 B | 168K | 94.32 | Depth-4 minimax baseline |
-| 3 | `neurofour-net16s` | 0.950 | 2,867 B | 3.4M | 74.25 | Best **learned** net (search over a compressed leaf) |
-| 4 | `neurofour-net0b` | 0.943 | 3,290 B | 875K | 72.32 | Nano value net |
+| — | **Oracle** | 1.000 | 0 B | 50.0M | 100.00 | Exact solver — **over the 5M-FLOP budget**, so ineligible for the headline |
+| **1** | **Zero** | **0.960** | **0 B** | 5.0M | **96.45** | **Zero-byte bitboard search — the champion** |
+| 2 | **Minimax-4** | 0.937 | 0 B | 168K | 94.32 | Depth-4 minimax baseline |
+| 3 | **Compressed+** | 0.950 | 2,867 B | 3.4M | 74.25 | Best **learned** net — depth-3 search over a quantized + pruned leaf |
+| 4 | **Nano+** | 0.943 | 3,290 B | 875K | 72.32 | Nano value net + refutation search |
 
 > **The takeaway:** on a solved game under a tight compute budget, *search beats learned models*, and the most "compressed" strong policy has **no weights at all**. Every neural net ≤32 KB was measured, and none beat zero-byte search. That negative result — rigorously established rather than assumed — is the point of the project.
 
@@ -113,7 +113,7 @@ A 0-byte agent pays **zero** size penalty, so pure search that matches a small n
 
 - **`app/engine`** — bitboard Connect 4 rules; a single canonical `Board.from_moves` so no endpoint can construct an illegal or double-winner board.
 - **`app/solver`** — exact solver used by `/analyze` and for offline ground-truth labels.
-- **`app/agents`** — the agent zoo: baselines (`random`/`heuristic`/`minimax`/`perfect`) and the `neurofour-net*` family; a registry loads each net's weights only if its artifact is present.
+- **`app/agents`** — the agent zoo: search/heuristic baselines and the learned-net family. Each agent has a stable registry id (`neurofour-net14`) and a display name shown everywhere in the UI (`Zero`) — see `app/agents/display.py`. The registry loads a net's weights only if its artifact is present.
 - **`app/neurogolf`** — strength/cost measurement, the ladder Elo, and the NeuroFour Score.
 - **`web`** — the React SPA; API base is configured at build time via `VITE_API_BASE`.
 

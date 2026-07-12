@@ -192,8 +192,8 @@ def test_source_has_no_solver_or_oracle_access():
 
 
 def test_no_hardcoded_weights_smuggled_into_source():
-    """Guard against the reward-hack pattern this task's own instructions
-    warn about ("no smuggling weights into python"): net16.py itself must
+    """Guard against smuggling weights into source: an agent must ship its
+    parameters as a measured artifact, so net16.py itself must
     not contain any large numeric literal arrays -- all weight data must
     come from the on-disk artifact via load_compressed()."""
     src = open(os.path.join(_ROOT, "app", "agents", "net16.py"), encoding="utf-8").read()

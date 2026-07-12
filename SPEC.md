@@ -154,7 +154,7 @@ A polished, responsive single app. Screens/flow:
    (optimality or Elo), with the non-dominated frontier drawn as a line and each agent as a point;
    highlight `neurofour-net` as the flagship. Hover/focus shows the agent's card.
 
-Quality bar (independent vision judge + scriptable gate): premium cohesive design; responsive at 375px
+Quality bar (independent design review + automated gate): premium cohesive design; responsive at 375px
 and 1440px with no horizontal page scroll; real loading/empty/error states; accessible (keyboard-
 playable board, visible focus, WCAG AA contrast, aria live region announcing moves/results, zero axe
 critical/serious); production build clean; zero console errors.

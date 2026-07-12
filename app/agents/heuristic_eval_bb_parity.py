@@ -70,8 +70,8 @@ not this hand count).
 a 1200-position pooled sample at M=2000 (`scripts/exp_net14_parity.py
 --weight-sweep`) then the winning weight was re-validated on the FULL
 pooled 6000 at flop-cap-equalized M before being adopted here -- not tuned
-against `sealed.jsonl` or any committed holdout. See the gen-11 coder
-report for the raw sweep numbers and the full-pooled/sealed validation.
+against `sealed.jsonl` or any committed holdout. Re-run the sweep script
+above to reproduce the raw numbers and the full-pooled/sealed validation.
 """
 from __future__ import annotations
 
