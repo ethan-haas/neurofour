@@ -44,19 +44,25 @@ Under that budget, the leaderboard champion is **`neurofour-net14` — a 0-byte,
 
 ## What you can do in the app
 
+Four screens — **Play · Agents · Leaderboard · About** — fully responsive, keyboard-accessible, and theme-aware (light + dark).
+
 <table>
 <tr>
 <td width="50%">
 
-**♟️ Play** against any of 20 agents — from `random` up to the perfect solver — on a responsive, keyboard-accessible board.
+**♟️ Play** against any of 20 agents — from `random` up to the perfect solver. Each agent has a descriptive name (**Zero**, **Oracle**, **Minimax-4**, **Compressed+**…); the picker shows every agent's optimality, size, and tier inline and ranks them by NeuroFour Score, so you pick with the stats in front of you. Defaults to the champion, **Zero**.
 
 **🔬 Analyze** any position: an exact Connect 4 solver overlays every legal move with its true game-theoretic value (Win / Draw / Loss) and mate distance. It *abstains* rather than bluffing when a position is too shallow to solve exactly.
 
-**📊 Leaderboard** with an interactive strength-vs-cost **Pareto plot** — toggle the cost axis between artifact size and FLOPs/move, and see exactly which agents are non-dominated.
+**🤖 Agents** — browse every agent as a stat card (optimality, size, FLOPs, latency, Elo, tier, Pareto/champion badges) and jump straight into a game against any of them.
+
+**📊 Leaderboard** — an interactive strength-vs-cost **Pareto plot** (toggle the cost axis between artifact size and FLOPs/move) plus the full ranking table.
 
 </td>
 <td width="50%">
 
+<img src="docs/img/picker.png" alt="Agent picker showing per-agent stats, ranked by NeuroFour Score" width="100%">
+<br><br>
 <img src="docs/img/analyze.png" alt="Exact solver analysis overlay" width="100%">
 
 </td>
@@ -64,6 +70,9 @@ Under that budget, the leaderboard champion is **`neurofour-net14` — a 0-byte,
 </table>
 
 <div align="center">
+<img src="docs/img/agents.png" alt="Agents screen — every agent as a stat card" width="49%">
+<img src="docs/img/about.png" alt="About screen — how the NeuroFour Score works" width="49%">
+<br>
 <img src="docs/img/play.png" alt="Play screen" width="49%">
 <img src="docs/img/leaderboard-dark.png" alt="Leaderboard, dark theme" width="49%">
 </div>
@@ -163,7 +172,7 @@ SPA routing is handled by [`web/public/_redirects`](web/public/_redirects). CORS
 
 **Backend:** Python · FastAPI · Pydantic v2 · NumPy · a from-scratch bitboard engine and exact Connect 4 solver.
 **Frontend:** React 19 · TypeScript · Vite · Tailwind CSS · fully keyboard-accessible, light/dark themed, 0 axe-core critical/serious violations at 375 px and 1440 px.
-**Quality:** 228 tests (unit + property + flop-honesty + anti-oracle-cheat guards); CI builds the frontend and runs the fast test subset on every push.
+**Quality:** 230+ tests (unit + property + flop-honesty + anti-oracle-cheat guards + API terminal-state / no-path-leak regressions); a Playwright e2e suite with a full WCAG axe matrix across all four screens × mobile/desktop × light/dark; CI builds the frontend and runs the fast test subset on every push.
 
 ## License
 
